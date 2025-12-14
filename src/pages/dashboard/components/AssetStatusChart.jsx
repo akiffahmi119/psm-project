@@ -10,6 +10,20 @@ const AssetStatusChart = ({ data }) => {
     'Lost/Stolen': '#DC2626'
   };
 
+  // --- NEW: Handle Empty State (Real Data Fix) ---
+  if (!data || data.length === 0) {
+    return (
+        <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center justify-center h-96 text-center">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Assets by Status</h3>
+            <div className="bg-muted/30 rounded-full p-6 mb-4">
+                <span className="text-4xl">📊</span>
+            </div>
+            <p className="text-muted-foreground">No assets registered yet.</p>
+            <p className="text-xs text-muted-foreground mt-1">Add an asset to see this chart.</p>
+        </div>
+    );
+  }
+
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload?.length) {
       const data = payload?.[0];
@@ -20,6 +34,7 @@ const AssetStatusChart = ({ data }) => {
             Count: <span className="font-medium text-foreground">{data?.value}</span>
           </p>
           <p className="text-sm text-muted-foreground">
+            {/* The 'total' prop comes correctly from our new index.jsx logic */}
             Percentage: <span className="font-medium text-foreground">{((data?.value / data?.payload?.total) * 100)?.toFixed(1)}%</span>
           </p>
         </div>

@@ -8,49 +8,49 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
   const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // UPDATED: Added Search Results to the list
+  // UPDATED: Corrected role names to match database ('system_admin')
   const navigationItems = [
     {
       label: 'Dashboard',
       path: '/dashboard',
       icon: 'LayoutDashboard',
-      roles: ['admin', 'it_staff', 'department_pic']
+      roles: ['system_admin', 'it_staff', 'department_pic'] // Changed 'admin' to 'system_admin'
     },
     {
       label: 'Search',
       path: '/search-results',
-      icon: 'Search', // Added Search icon
-      roles: ['admin', 'it_staff', 'department_pic']
+      icon: 'Search',
+      roles: ['system_admin', 'it_staff', 'department_pic']
     },
     {
       label: 'Asset List',
       path: '/asset-list',
       icon: 'Package',
-      roles: ['admin', 'it_staff', 'department_pic']
+      roles: ['system_admin', 'it_staff', 'department_pic']
     },
     {
       label: 'Add Asset',
       path: '/asset-registration',
       icon: 'Plus',
-      roles: ['admin', 'it_staff']
+      roles: ['system_admin', 'it_staff'] // Changed 'admin' to 'system_admin'
     },
     {
       label: 'Checkout Management',
       path: '/checkout-management',
       icon: 'UserCheck',
-      roles: ['admin', 'it_staff']
+      roles: ['system_admin', 'it_staff']
     },
     {
       label: 'Supplier Management',
       path: '/supplier-management',
       icon: 'Truck',
-      roles: ['admin', 'it_staff']
+      roles: ['system_admin', 'it_staff']
     },
     {
       label: 'Lifecycle Planning',
       path: '/lifecycle-planning',
       icon: 'TrendingUp',
-      roles: ['admin', 'it_staff']
+      roles: ['system_admin', 'it_staff']
     }
   ];
 
@@ -63,9 +63,12 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
     setIsMobileOpen(!isMobileOpen);
   };
 
-  const filteredNavItems = navigationItems?.filter(item => 
-    !user?.role || item?.roles?.includes(user?.role)
-  );
+  // Improved filtering: if user role is missing, default to showing nothing to be safe
+  const filteredNavItems = navigationItems?.filter(item => {
+    const userRole = user?.role || user?.app_metadata?.role;
+    // Show item if user has one of the allowed roles
+    return item.roles.includes(userRole);
+  });
 
   const isActive = (path) => {
     if (path === '/dashboard') {
@@ -169,7 +172,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
                     {user?.name || 'User'}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {user?.role || 'IT Staff'}
+                    {user?.role === 'system_admin' ? 'System Admin' : user?.role || 'IT Staff'}
                   </div>
                 </div>
               </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
-import { logoutUser } from '../../store/authSlice';   // Import the actual logout action
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../../store/authSlice';
+import { supabase } from '../../lib/supabaseClient'; // 1. Import Supabase
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
@@ -20,146 +21,156 @@ const Dashboard = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   
+  // 2. New State for Real Data
+  const [realStats, setRealStats] = useState({
+      totalAssets: 0,
+      inUseCount: 0,
+      inStorageCount: 0,
+      expiringCount: 0,
+      assetsByStatus: [],
+      assetsByCategory: [],
+      recentAssets: []
+  });
+
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // Initialize dispatch
+  const dispatch = useDispatch();
   
-  // Get the Real User from Redux State
   const { user: authUser } = useSelector((state) => state.auth);
 
-  // Create a display user object that merges Auth data with UI needs
   const user = {
     id: authUser?.id || 'guest',
-    name: authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || "User",
+    name: authUser?.full_name || authUser?.email?.split('@')[0] || "User", // Use full_name from profile if available
     email: authUser?.email || "user@panasonic.com",
-    role: authUser?.app_metadata?.role || "it_staff", // Assuming role is stored here, or default
-    avatar: null, // You can add logic for avatars later
+    role: authUser?.role || "it_staff",
+    avatar: null,
     avatarAlt: "User Avatar"
   };
 
-  // Mock KPI data (Preserved your existing mock data for UI visualization)
+  // 3. FETCH REAL DATA FROM SUPABASE
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+        try {
+            // Fetch all assets
+            const { data: assets, error } = await supabase
+                .from('assets')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            // --- CALCULATIONS ---
+            const totalAssets = assets.length;
+            const inUseCount = assets.filter(a => a.status === 'In Use').length;
+            const inStorageCount = assets.filter(a => a.status === 'In Storage').length;
+            
+            // Dummy logic for "Expiring Soon" (since we might not have warranty dates set perfectly yet)
+            // In a real scenario, compare 'warranty_months' + 'purchase_date' vs Today
+            const expiringCount = 0; 
+
+            // Group for Status Chart
+            const statusMap = assets.reduce((acc, curr) => {
+                acc[curr.status] = (acc[curr.status] || 0) + 1;
+                return acc;
+            }, {});
+            const assetsByStatus = Object.keys(statusMap).map(key => ({ 
+                name: key, 
+                value: statusMap[key],
+                total: totalAssets // Keep your component's expected format
+            }));
+
+            // Group for Category Chart
+            const categoryMap = assets.reduce((acc, curr) => {
+                acc[curr.category] = (acc[curr.category] || 0) + 1;
+                return acc;
+            }, {});
+            const assetsByCategory = Object.keys(categoryMap).map(key => ({ 
+                category: key, 
+                count: categoryMap[key] 
+            }));
+
+            // Map Recent Activity (using newly added assets)
+            const recentAssets = assets.slice(0, 5).map(asset => ({
+                id: asset.id,
+                type: 'asset_added', // For now, we only track additions
+                description: `New ${asset.product_name} (${asset.category})`,
+                user: 'System Admin', // Placeholder until we track creator_id
+                timestamp: new Date(asset.created_at),
+                assetId: asset.asset_tag
+            }));
+
+            setRealStats({
+                totalAssets,
+                inUseCount,
+                inStorageCount,
+                expiringCount,
+                assetsByStatus,
+                assetsByCategory,
+                recentAssets
+            });
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            // Optionally set a notification error here
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+
+  // 4. MAP REAL DATA TO YOUR UI PROPS
+
+  // Replaced Mock KPI Data with Real Stats
   const kpiData = [
     {
       title: "Total Assets",
-      value: "2,847",
+      value: realStats.totalAssets.toLocaleString(),
       subtitle: "Active inventory",
       icon: "Package",
-      trend: "up",
-      trendValue: "+12%",
+      trend: "up", // Logic for trends requires historical data, keeping static for now
+      trendValue: "+0%",
       color: "primary"
     },
     {
       title: "Assets in Use",
-      value: "2,156",
+      value: realStats.inUseCount.toLocaleString(),
       subtitle: "Currently deployed",
       icon: "CheckCircle",
       trend: "up",
-      trendValue: "+5%",
+      trendValue: "+0%",
       color: "success"
     },
     {
       title: "In Storage",
-      value: "534",
+      value: realStats.inStorageCount.toLocaleString(),
       subtitle: "Available for deployment",
       icon: "Archive",
       trend: "down",
-      trendValue: "-3%",
+      trendValue: "-0%",
       color: "warning"
     },
     {
       title: "Expiring Soon",
-      value: "157",
+      value: realStats.expiringCount.toLocaleString(),
       subtitle: "Within 90 days",
       icon: "AlertTriangle",
       trend: "up",
-      trendValue: "+8%",
+      trendValue: "+0%",
       color: "error"
     }
   ];
 
-  // Mock chart data (Preserved)
-  const statusChartData = [
-    { name: 'In Use', value: 2156, total: 2847 },
-    { name: 'In Storage', value: 534, total: 2847 },
-    { name: 'Under Repair', value: 89, total: 2847 },
-    { name: 'Retired', value: 68, total: 2847 }
-  ];
-
-  const categoryChartData = [
-    { category: 'Laptops', count: 856 },
-    { category: 'Desktops', count: 423 },
-    { category: 'Monitors', count: 672 },
-    { category: 'Printers', count: 234 },
-    { category: 'Network', count: 189 },
-    { category: 'Servers', count: 156 },
-    { category: 'Mobile', count: 317 }
-  ];
-
+  // Keep Trend Data Mocked for now (until we have months of data)
   const trendChartData = [
-    { month: 'May 2024', count: 45 },
-    { month: 'Jun 2024', count: 67 },
-    { month: 'Jul 2024', count: 89 },
-    { month: 'Aug 2024', count: 123 },
-    { month: 'Sep 2024', count: 156 },
-    { month: 'Oct 2024', count: 178 }
+    { month: 'May', count: 0 },
+    { month: 'Jun', count: 0 },
+    { month: 'Jul', count: 0 },
+    { month: 'Aug', count: 0 },
+    { month: 'Sep', count: 0 },
+    { month: 'Oct', count: realStats.totalAssets } // Show current total at end
   ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'asset_added',
-      description: 'New Dell Laptop OptiPlex 7090 added to inventory',
-      user: 'Michael Chen',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      assetId: 'AST-2847'
-    },
-    {
-      id: 2,
-      type: 'asset_checked_out',
-      description: 'HP Monitor U2720Q checked out to Marketing Department',
-      user: 'Sarah Johnson',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000),
-      assetId: 'AST-1234'
-    },
-    {
-      id: 3,
-      type: 'maintenance_logged',
-      description: 'Maintenance completed on Cisco Router ISR4331',
-      user: 'David Rodriguez',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      assetId: 'AST-0987'
-    },
-    {
-      id: 4,
-      type: 'asset_updated',
-      description: 'Asset location updated for Lenovo ThinkPad X1 Carbon',
-      user: 'Emily Watson',
-      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      assetId: 'AST-5678'
-    },
-    {
-      id: 5,
-      type: 'asset_checked_in',
-      description: 'Canon Printer ImageCLASS returned from Finance Department',
-      user: 'James Wilson',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      assetId: 'AST-3456'
-    },
-    {
-      id: 6,
-      type: 'asset_retired',
-      description: 'Old Dell Desktop OptiPlex 3070 marked as retired',
-      user: 'Sarah Johnson',
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      assetId: 'AST-0123'
-    }
-  ];
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSearch = (query) => {
     navigate(`/search-results?q=${encodeURIComponent(query)}`);
@@ -168,24 +179,20 @@ const Dashboard = () => {
   const handleNotificationClick = () => {
     const newNotification = {
       id: Date.now(),
-      message: "You have 3 assets expiring within the next 30 days",
-      type: "warning",
-      duration: 5000
+      message: "System notification test.",
+      type: "info",
+      duration: 3000
     };
     setNotifications((prev) => [...prev, newNotification]);
   };
 
-  // --- UPDATED LOGOUT LOGIC ---
   const handleProfileClick = async (action) => {
     const actions = {
       profile: () => console.log('Navigate to profile'),
       preferences: () => console.log('Navigate to preferences'),
       help: () => console.log('Navigate to help'),
-      
-      // The Critical Fix: Dispatch Redux Action
       logout: async () => {
         try {
-          // 1. Notify user
           const notification = {
             id: Date.now(),
             message: "Logging out...",
@@ -193,42 +200,22 @@ const Dashboard = () => {
             duration: 1000
           };
           setNotifications((prev) => [...prev, notification]);
-
-          // 2. Perform actual logout against Supabase
           await dispatch(logoutUser()).unwrap();
-          
-          // 3. Navigate to login (optional, as App.jsx listener usually handles this)
           navigate('/login');
-          
         } catch (error) {
           console.error("Logout failed:", error);
-          const errorNotification = {
-            id: Date.now(),
-            message: "Logout failed. Please try again.",
-            type: "error",
-            duration: 3000
-          };
-          setNotifications((prev) => [...prev, errorNotification]);
         }
       }
     };
-
-    if (actions?.[action]) {
-      actions?.[action]();
-    }
+    if (actions?.[action]) actions?.[action]();
   };
 
   const removeNotification = (id) => {
     setNotifications((prev) => prev?.filter((notification) => notification?.id !== id));
   };
 
-  const handleAddAsset = () => {
-    navigate('/asset-registration');
-  };
-
-  const handleBulkImport = () => {
-    navigate('/asset-registration?mode=bulk');
-  };
+  const handleAddAsset = () => navigate('/asset-registration');
+  const handleBulkImport = () => navigate('/asset-registration?mode=bulk');
 
   if (isLoading) {
     return (
@@ -238,12 +225,7 @@ const Dashboard = () => {
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           user={user} 
         />
-        <Header
-          user={user}
-          onSearch={handleSearch}
-          onNotificationClick={handleNotificationClick}
-          onProfileClick={handleProfileClick} 
-        />
+        <Header user={user} />
         <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} pt-16`}>
           <div className="p-6">
             <DashboardSkeleton />
@@ -275,18 +257,10 @@ const Dashboard = () => {
               <p className="text-muted-foreground">Monitor and manage your IT assets efficiently</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                iconName="Upload"
-                iconPosition="left"
-                onClick={handleBulkImport}>
+              <Button variant="outline" iconName="Upload" onClick={handleBulkImport}>
                 Bulk Import
               </Button>
-              <Button
-                variant="default"
-                iconName="Plus"
-                iconPosition="left"
-                onClick={handleAddAsset}>
+              <Button variant="default" iconName="Plus" onClick={handleAddAsset}>
                 Add Asset
               </Button>
             </div>
@@ -296,21 +270,24 @@ const Dashboard = () => {
             <GlobalSearchBar />
           </div>
 
+          {/* KPI Cards using Real Data */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {kpiData?.map((kpi, index) =>
               <KPICard key={index} {...kpi} />
             )}
           </div>
 
+          {/* Charts using Real Data */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <AssetStatusChart data={statusChartData} />
-            <AssetCategoryChart data={categoryChartData} />
+            <AssetStatusChart data={realStats.assetsByStatus} />
+            <AssetCategoryChart data={realStats.assetsByCategory} />
             <AssetTrendChart data={trendChartData} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <RecentActivityFeed activities={recentActivities} />
+              {/* Recent Activity using Real Data */}
+              <RecentActivityFeed activities={realStats.recentAssets} />
             </div>
             <div>
               <QuickActions />

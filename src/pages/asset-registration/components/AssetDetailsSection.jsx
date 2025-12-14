@@ -1,19 +1,9 @@
 import React from 'react';
-import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
 
-const AssetDetailsSection = ({ 
-  formData, 
-  onInputChange, 
-  errors, 
-  categoryOptions, 
-  modelSuggestions, 
-  onModelSearch 
-}) => {
-  const handleInputChange = (field, value) => {
-    onInputChange(field, value);
-  };
+const AssetDetailsSection = ({ register, errors }) => {
+  // Helper class to mimic your UI's input style
+  const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">
@@ -21,94 +11,54 @@ const AssetDetailsSection = ({
         <Icon name="Package" size={20} className="text-primary" />
         <h3 className="text-lg font-semibold text-foreground">Asset Details</h3>
       </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Select
-          label="Asset Category"
-          description="Select the type of asset being registered"
-          required
-          options={categoryOptions}
-          value={formData?.category}
-          onChange={(value) => handleInputChange('category', value)}
-          error={errors?.category}
-          placeholder="Choose category..."
-        />
-
-        <Input
-          label="Asset Name"
-          type="text"
-          placeholder="Enter asset name"
-          required
-          value={formData?.assetName}
-          onChange={(e) => handleInputChange('assetName', e?.target?.value)}
-          error={errors?.assetName}
-          description="Descriptive name for the asset"
-        />
-
-        <Input
-          label="Model"
-          type="text"
-          placeholder="Enter model number or name"
-          required
-          value={formData?.model}
-          onChange={(e) => {
-            handleInputChange('model', e?.target?.value);
-            onModelSearch(e?.target?.value);
-          }}
-          error={errors?.model}
-          description="Model number or name with autocomplete"
-        />
-
-        <Input
-          label="Serial Number"
-          type="text"
-          placeholder="Enter serial number"
-          required
-          value={formData?.serialNumber}
-          onChange={(e) => handleInputChange('serialNumber', e?.target?.value)}
-          error={errors?.serialNumber}
-          description="Unique identifier for this asset"
-        />
-
-        <Input
-          label="Manufacturer"
-          type="text"
-          placeholder="Enter manufacturer name"
-          required
-          value={formData?.manufacturer}
-          onChange={(e) => handleInputChange('manufacturer', e?.target?.value)}
-          error={errors?.manufacturer}
-          description="Company that manufactured the asset"
-        />
-
-        <Input
-          label="Asset Tag"
-          type="text"
-          placeholder="Enter asset tag (optional)"
-          value={formData?.assetTag}
-          onChange={(e) => handleInputChange('assetTag', e?.target?.value)}
-          error={errors?.assetTag}
-          description="Internal asset tag or barcode"
-        />
-      </div>
-      {/* Model Suggestions */}
-      {modelSuggestions?.length > 0 && formData?.model && (
-        <div className="mt-4">
-          <div className="bg-muted rounded-lg p-3">
-            <p className="text-sm font-medium text-foreground mb-2">Suggested Models:</p>
-            <div className="flex flex-wrap gap-2">
-              {modelSuggestions?.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleInputChange('model', suggestion)}
-                  className="px-3 py-1 bg-background border border-border rounded-md text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Category */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Asset Category</label>
+            <select {...register("category")} className={inputClass}>
+                <option value="Laptop">Laptop</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Monitor">Monitor</option>
+                <option value="Printer">Printer</option>
+                <option value="Server">Server</option>
+                <option value="Network">Network</option>
+            </select>
+            {errors.category && <p className="text-xs text-red-500">{errors.category.message}</p>}
         </div>
-      )}
+
+        {/* Product Name */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Asset Name</label>
+            <input 
+                {...register("product_name")} 
+                placeholder="e.g. Dell Latitude 7420"
+                className={inputClass}
+            />
+            {errors.product_name && <p className="text-xs text-red-500">{errors.product_name.message}</p>}
+        </div>
+
+        {/* Model */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Model</label>
+            <input 
+                {...register("model")} 
+                placeholder="e.g. Latitude 7420"
+                className={inputClass}
+            />
+        </div>
+
+        {/* Serial Number */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Serial Number</label>
+            <input 
+                {...register("serial_number")} 
+                placeholder="e.g. SN-998877"
+                className={inputClass}
+            />
+            {errors.serial_number && <p className="text-xs text-red-500">{errors.serial_number.message}</p>}
+        </div>
+      </div>
     </div>
   );
 };

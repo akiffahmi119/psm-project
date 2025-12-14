@@ -1,35 +1,9 @@
 import React from 'react';
-import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
 
-const FinancialSection = ({ 
-  formData, 
-  onInputChange, 
-  errors, 
-  supplierOptions, 
-  warrantyOptions 
-}) => {
-  const handleInputChange = (field, value) => {
-    onInputChange(field, value);
-  };
-
-  const formatCurrency = (value) => {
-    if (!value) return '';
-    const numericValue = value?.toString()?.replace(/[^0-9.]/g, '');
-    const number = parseFloat(numericValue);
-    if (isNaN(number)) return '';
-    return number?.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
-  const handleCostChange = (e) => {
-    const value = e?.target?.value;
-    const numericValue = value?.replace(/[^0-9.]/g, '');
-    handleInputChange('purchaseCost', numericValue);
-  };
+const FinancialSection = ({ register, errors, suppliers = [] }) => {
+  // Helper class for consistent input styling
+  const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div className="bg-card border border-border rounded-lg p-6">
@@ -37,92 +11,65 @@ const FinancialSection = ({
         <Icon name="DollarSign" size={20} className="text-primary" />
         <h3 className="text-lg font-semibold text-foreground">Financial Information</h3>
       </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Purchase Date"
-          type="date"
-          required
-          value={formData?.purchaseDate}
-          onChange={(e) => handleInputChange('purchaseDate', e?.target?.value)}
-          error={errors?.purchaseDate}
-          description="Date when asset was purchased (MM/DD/YYYY)"
-        />
-
+        {/* Supplier Dropdown (Real Data) */}
         <div className="space-y-2">
-          <Input
-            label="Purchase Cost (USD)"
-            type="text"
-            placeholder="0.00"
-            required
-            value={formData?.purchaseCost ? `$${formatCurrency(formData?.purchaseCost)}` : ''}
-            onChange={handleCostChange}
-            error={errors?.purchaseCost}
-            description="Total cost including taxes and fees"
-          />
+            <label className="text-sm font-medium leading-none">
+              Supplier <span className="text-red-500">*</span>
+            </label>
+            <select 
+              {...register("supplier_id")} 
+              className={inputClass}
+            >
+                <option value="">Select Supplier</option>
+                {suppliers.map(sup => (
+                    <option key={sup.value} value={sup.value}>{sup.label}</option>
+                ))}
+            </select>
+            {errors.supplier_id && (
+              <p className="text-xs text-red-500 font-medium">{errors.supplier_id.message}</p>
+            )}
         </div>
 
-        <Select
-          label="Supplier/Vendor"
-          description="Company that supplied this asset"
-          required
-          searchable
-          options={supplierOptions}
-          value={formData?.supplier}
-          onChange={(value) => handleInputChange('supplier', value)}
-          error={errors?.supplier}
-          placeholder="Select or search supplier..."
-        />
+        {/* Purchase Price */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Purchase Price (MYR)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">RM</span>
+              <input 
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...register("purchase_price")} 
+                  className={`${inputClass} pl-9`} // Add padding for "RM"
+              />
+            </div>
+            {errors.purchase_price && <p className="text-xs text-red-500">{errors.purchase_price.message}</p>}
+        </div>
 
-        <Input
-          label="Purchase Order Number"
-          type="text"
-          placeholder="Enter PO number (optional)"
-          value={formData?.poNumber}
-          onChange={(e) => handleInputChange('poNumber', e?.target?.value)}
-          error={errors?.poNumber}
-          description="Reference purchase order number"
-        />
+        {/* Purchase Date */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Purchase Date</label>
+            <input 
+                type="date"
+                {...register("purchase_date")} 
+                className={inputClass}
+            />
+            {errors.purchase_date && <p className="text-xs text-red-500">{errors.purchase_date.message}</p>}
+        </div>
 
-        <Select
-          label="Warranty Period"
-          description="Duration of manufacturer warranty"
-          options={warrantyOptions}
-          value={formData?.warrantyPeriod}
-          onChange={(value) => handleInputChange('warrantyPeriod', value)}
-          error={errors?.warrantyPeriod}
-          placeholder="Select warranty period..."
-        />
-
-        <Input
-          label="Warranty Expiry Date"
-          type="date"
-          value={formData?.warrantyExpiry}
-          onChange={(e) => handleInputChange('warrantyExpiry', e?.target?.value)}
-          error={errors?.warrantyExpiry}
-          description="When warranty coverage ends"
-        />
-
-        <Input
-          label="Depreciation Method"
-          type="text"
-          placeholder="e.g., Straight Line, Declining Balance"
-          value={formData?.depreciationMethod}
-          onChange={(e) => handleInputChange('depreciationMethod', e?.target?.value)}
-          error={errors?.depreciationMethod}
-          description="Method used for asset depreciation"
-        />
-
-        <Input
-          label="Expected Life (Years)"
-          type="number"
-          placeholder="Enter expected lifespan"
-          min="1"
-          max="50"
-          value={formData?.expectedLife}
-          onChange={(e) => handleInputChange('expectedLife', e?.target?.value)}
-          error={errors?.expectedLife}
-          description="Expected useful life in years"
-        />
+        {/* Warranty (Simplified to Months) */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Warranty (Months)</label>
+            <input 
+                type="number"
+                placeholder="e.g. 12 or 24"
+                {...register("warranty_months")} 
+                className={inputClass}
+            />
+             <p className="text-xs text-muted-foreground">Enter 0 if no warranty.</p>
+        </div>
       </div>
     </div>
   );
