@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
+import { useSelector } from 'react-redux';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { LoadingSpinner } from '../../components/ui/LoadingState';
 
@@ -33,12 +34,8 @@ const SearchResults = () => {
     dateRange: ''
   });
 
-  // Mock user data
-  const user = {
-    name: "Sarah Johnson",
-    email: "sarah.johnson@panasonic.com",
-    role: "it_staff"
-  };
+  // Get actual user from Redux store
+  const { user } = useSelector((state) => state.auth);
 
   // Mock search results data
   const mockSearchResults = [

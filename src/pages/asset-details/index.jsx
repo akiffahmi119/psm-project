@@ -33,191 +33,50 @@ const AssetDetails = () => {
     avatarAlt: "Professional headshot of woman with shoulder-length brown hair in business attire"
   };
 
-  // Mock asset data
-  const [asset] = useState({
-    id: "AST-2024-001",
-    name: "Dell OptiPlex 7090 Desktop",
-    category: "Desktop Computer",
-    status: "In Use",
-    location: "IT Department - Floor 3",
-    department: "Information Technology",
-    serialNumber: "DL7090-2024-001",
-    model: "OptiPlex 7090",
-    brand: "Dell",
-    assetTag: "PAN-IT-001",
-    assignedTo: "Michael Chen",
-    assignmentDate: "2024-01-15",
-    purchasePrice: 1299.99,
-    purchaseDate: "2024-01-10",
-    supplier: "Dell Technologies",
-    purchaseOrder: "PO-2024-0001",
-    warrantyExpiry: "2027-01-10",
-    warrantyProvider: "Dell ProSupport",
-    specifications: {
-      processor: "Intel Core i7-11700",
-      memory: "16GB DDR4",
-      storage: "512GB NVMe SSD",
-      graphics: "Intel UHD Graphics 750",
-      operatingSystem: "Windows 11 Pro",
-      networkCard: "Intel Ethernet Connection",
-      ports: "USB 3.2, HDMI, DisplayPort"
-    }
-  });
-
-  // Mock maintenance history
-  const [maintenanceHistory] = useState([
-  {
-    id: 1,
-    title: "Quarterly System Maintenance",
-    type: "Preventive",
-    date: "2024-10-01",
-    cost: 75.00,
-    technician: "David Rodriguez",
-    description: "Performed routine system cleaning, updated drivers, and ran diagnostic tests. All components functioning within normal parameters.",
-    partsReplaced: [],
-    nextMaintenanceDate: "2025-01-01"
-  },
-  {
-    id: 2,
-    title: "Memory Upgrade",
-    type: "Corrective",
-    date: "2024-08-15",
-    cost: 150.00,
-    technician: "Lisa Wang",
-    description: "Upgraded system memory from 8GB to 16GB DDR4 to improve performance for CAD applications.",
-    partsReplaced: ["8GB DDR4 Module", "16GB DDR4 Module"],
-    nextMaintenanceDate: null
-  },
-  {
-    id: 3,
-    title: "Emergency Power Supply Replacement",
-    type: "Emergency",
-    date: "2024-06-20",
-    cost: 220.00,
-    technician: "Robert Kim",
-    description: "Replaced faulty power supply unit after system experienced unexpected shutdowns. Tested all components post-replacement.",
-    partsReplaced: ["450W Power Supply Unit"],
-    nextMaintenanceDate: null
-  }]
-  );
-
-  // Mock attachments
-  const [attachments] = useState([
-  {
-    id: 1,
-    name: "Purchase_Invoice_AST-2024-001.pdf",
-    size: 245760,
-    uploadedAt: "2024-01-10T10:30:00Z",
-    uploadedBy: "Sarah Johnson",
-    description: "Original purchase invoice from Dell Technologies"
-  },
-  {
-    id: 2,
-    name: "Warranty_Certificate.pdf",
-    size: 156432,
-    uploadedAt: "2024-01-10T11:15:00Z",
-    uploadedBy: "Sarah Johnson",
-    description: "Dell ProSupport warranty certificate"
-  },
-  {
-    id: 3,
-    name: "System_Specifications.xlsx",
-    size: 89123,
-    uploadedAt: "2024-01-15T09:45:00Z",
-    uploadedBy: "Michael Chen",
-    description: "Detailed hardware and software specifications"
-  },
-  {
-    id: 4,
-    name: "Setup_Photos.zip",
-    size: 2456789,
-    uploadedAt: "2024-01-15T14:20:00Z",
-    uploadedBy: "Michael Chen",
-    description: "Photos of workstation setup and cable management"
-  }]
-  );
-
-  // Mock audit trail
-  const [auditTrail] = useState([
-  {
-    id: 1,
-    action: "Created",
-    timestamp: "2024-01-10T09:00:00Z",
-    user: "Sarah Johnson",
-    userRole: "IT Staff",
-    description: "Asset record created in the system with initial specifications and purchase information.",
-    ipAddress: "192.168.1.45",
-    sessionId: "sess_abc123",
-    deviceInfo: "Windows 11 - Chrome 118.0",
-    changes: [
-    { field: "Status", newValue: "In Storage", oldValue: null },
-    { field: "Location", newValue: "IT Department - Floor 3", oldValue: null }]
-
-  },
-  {
-    id: 2,
-    action: "Assigned",
-    timestamp: "2024-01-15T08:30:00Z",
-    user: "Sarah Johnson",
-    userRole: "IT Staff",
-    description: "Asset assigned to Michael Chen for daily use in the Engineering Department.",
-    ipAddress: "192.168.1.45",
-    sessionId: "sess_def456",
-    deviceInfo: "Windows 11 - Chrome 118.0",
-    changes: [
-    { field: "Status", oldValue: "In Storage", newValue: "In Use" },
-    { field: "Assigned To", oldValue: null, newValue: "Michael Chen" },
-    { field: "Assignment Date", oldValue: null, newValue: "2024-01-15" }]
-
-  },
-  {
-    id: 3,
-    action: "Maintenance",
-    timestamp: "2024-06-20T14:15:00Z",
-    user: "Robert Kim",
-    userRole: "Technician",
-    description: "Emergency maintenance performed - power supply unit replacement due to system failures.",
-    ipAddress: "192.168.1.78",
-    sessionId: "sess_ghi789",
-    deviceInfo: "Windows 10 - Edge 115.0",
-    changes: []
-  },
-  {
-    id: 4,
-    action: "Updated",
-    timestamp: "2024-08-15T11:45:00Z",
-    user: "Lisa Wang",
-    userRole: "IT Staff",
-    description: "System specifications updated following memory upgrade from 8GB to 16GB DDR4.",
-    ipAddress: "192.168.1.52",
-    sessionId: "sess_jkl012",
-    deviceInfo: "macOS 14 - Safari 17.0",
-    changes: [
-    { field: "Memory", oldValue: "8GB DDR4", newValue: "16GB DDR4" }]
-
-  },
-  {
-    id: 5,
-    action: "Maintenance",
-    timestamp: "2024-10-01T10:00:00Z",
-    user: "David Rodriguez",
-    userRole: "Technician",
-    description: "Quarterly preventive maintenance completed - system cleaning and diagnostic tests performed.",
-    ipAddress: "192.168.1.89",
-    sessionId: "sess_mno345",
-    deviceInfo: "Windows 11 - Firefox 119.0",
-    changes: []
-  }]
-  );
+  const [asset, setAsset] = useState(null);
+  const [maintenanceHistory, setMaintenanceHistory] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [auditTrail, setAuditTrail] = useState([]);
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const fetchAsset = async () => {
+      if (!id) {
+        setIsLoading(false);
+        addNotification({ type: 'error', message: 'No asset ID provided.' });
+        return;
+      }
 
-    return () => clearTimeout(timer);
-  }, []);
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('assets')
+          .select('*, department:departments(name), supplier:suppliers(name), assigned_to:employees(full_name)')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        
+        if (data) {
+          const formattedAsset = {
+            ...data,
+            location_name: data.department?.name || 'N/A',
+            supplier_name: data.supplier?.name || 'N/A',
+            assigned_to_name: data.assigned_to?.full_name || 'Unassigned',
+          };
+          setAsset(formattedAsset);
+        } else {
+          addNotification({ type: 'error', message: `Asset with ID ${id} not found.` });
+        }
+      } catch (error) {
+        console.error("Error fetching asset details:", error);
+        addNotification({ type: 'error', message: 'Failed to fetch asset details.' });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAsset();
+  }, [id]);
 
   const addNotification = (notification) => {
     const id = Date.now();

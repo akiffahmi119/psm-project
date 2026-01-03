@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Button from '../../../components/ui/Button';
+import AppImage from '../../../components/AppImage'; // Assuming you have an AppImage component
 
 const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
   const getStatusColor = (status) => {
@@ -20,7 +21,17 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-6">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        
+        {/* Asset Image */}
+        <div className="w-full lg:w-1/4 xl:w-1/5">
+          <AppImage 
+            src={asset?.image_url} 
+            alt={asset?.name}
+            className="rounded-lg object-cover w-full h-48 lg:h-full"
+          />
+        </div>
+
         {/* Asset Info */}
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
@@ -32,10 +43,10 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
             </span>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Asset ID:</span>
-              <span className="ml-2 font-medium text-foreground">{asset?.id}</span>
+              <span className="text-muted-foreground">Asset Tag:</span>
+              <span className="ml-2 font-medium text-foreground">{asset?.asset_tag}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Category:</span>
@@ -43,19 +54,19 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
             </div>
             <div>
               <span className="text-muted-foreground">Location:</span>
-              <span className="ml-2 font-medium text-foreground">{asset?.location}</span>
+              <span className="ml-2 font-medium text-foreground">{asset?.location_name || 'N/A'}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Serial Number:</span>
-              <span className="ml-2 font-medium text-foreground">{asset?.serialNumber}</span>
+              <span className="ml-2 font-medium text-foreground">{asset?.serial_number}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Model:</span>
-              <span className="ml-2 font-medium text-foreground">{asset?.model}</span>
+              <span className="ml-2 font-medium text-foreground">{asset?.model || 'N/A'}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Assigned To:</span>
-              <span className="ml-2 font-medium text-foreground">{asset?.assignedTo || 'Unassigned'}</span>
+              <span className="ml-2 font-medium text-foreground">{asset?.assigned_to_name || 'Unassigned'}</span>
             </div>
           </div>
         </div>

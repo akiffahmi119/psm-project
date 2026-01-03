@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
+import { useSelector } from 'react-redux';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { DashboardSkeleton } from '../../components/ui/LoadingState';
 import Button from '../../components/ui/Button';
@@ -37,16 +38,7 @@ const CheckoutManagement = () => {
   });
 
   const navigate = useNavigate();
-
-  // Mock user data
-  const user = {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@panasonic.com",
-    role: "it_staff",
-    avatar: "https://images.unsplash.com/photo-1684262855358-88f296a2cfc2",
-    avatarAlt: "Professional headshot of woman with brown hair in white blazer smiling at camera"
-  };
+  const { user } = useSelector((state) => state.auth);
 
   // Mock statistics data
   const statsData = [

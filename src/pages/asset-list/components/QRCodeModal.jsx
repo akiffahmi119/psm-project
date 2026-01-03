@@ -1,152 +1,102 @@
 import React from 'react';
-import Button from '../../../components/ui/Button';
+import QRCode from 'react-qr-code';
 import Icon from '../../../components/AppIcon';
+import Button from '../../../components/ui/Button';
 
-const QRCodeModal = ({ asset, isOpen, onClose, onPrint }) => {
-  if (!isOpen || !asset) return null;
+const QRCodeModal = ({ asset, isOpen, onClose }) => {
+  if (!isOpen) return null;
 
-  // Generate QR code URL (using a QR code service)
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-    `Asset ID: ${asset?.assetId}\nName: ${asset?.name}\nSerial: ${asset?.serialNumber}\nLocation: ${asset?.location}`
-  )}`;
+  const qrCodeUrl = `${window.location.origin}/asset-details/${asset.id}`;
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    printWindow?.document?.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>QR Code - ${asset?.assetId}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              padding: 20px;
-              margin: 0;
-            }
-            .qr-container {
-              text-align: center;
-              border: 2px solid #000;
-              padding: 20px;
-              margin: 20px;
-              max-width: 300px;
-            }
-            .asset-info {
-              margin-top: 15px;
-              font-size: 12px;
-              line-height: 1.4;
-            }
-            .asset-id {
-              font-weight: bold;
-              font-size: 14px;
-              margin-bottom: 5px;
-            }
-            img {
-              max-width: 200px;
-              height: auto;
-            }
-            @media print {
-              body { margin: 0; }
-              .qr-container { border: 1px solid #000; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="qr-container">
-            <img src="${qrCodeUrl}" alt="QR Code for asset ${asset?.assetId}" />
-            <div class="asset-info">
-              <div class="asset-id">${asset?.assetId}</div>
-              <div>${asset?.name}</div>
-              <div>S/N: ${asset?.serialNumber}</div>
-              <div>${asset?.location}</div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow?.document?.close();
-    printWindow?.print();
-    
-    if (onPrint) {
-      onPrint(asset);
-    }
+    window.print();
   };
+  
+  const handleDownload = () => {
+    const svg = document.getElementById("QRCodeSvg");
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `${asset.asset_tag}_qrcode.png`;
+      downloadLink.href = `${pngFile}`;
+      downloadLink.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  };
+
+  const printStyles = `
+    @media print {
+      /* Hide elements that should not be printed */
+      .no-print {
+        display: none !important;
+      }
+      
+      /* Reset the layout for the modal content to be printable */
+      .printable-modal-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+    }
+  `;
 
   return (
     <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-300"
-        onClick={onClose}
-      />
-      {/* Modal */}
-      <div className="fixed inset-0 z-400 flex items-center justify-center p-4">
-        <div className="bg-card border border-border rounded-lg shadow-modal w-full max-w-md">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">QR Code</h2>
-              <p className="text-sm text-muted-foreground">{asset?.assetId}</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              iconName="X"
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground"
-            />
+      <style>{printStyles}</style>
+      
+      {/* The modal container. The dark overlay is marked as no-print */}
+      <div className="no-print fixed inset-0 bg-black/50 z-300 flex items-center justify-center p-4">
+        
+        {/* The actual modal content panel */}
+        <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md printable-modal-content">
+          
+          {/* Header - marked as no-print */}
+          <div className="no-print flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">Asset QR Code</h3>
+            <Button variant="ghost" size="icon" iconName="X" onClick={onClose} />
           </div>
 
-          {/* Content */}
-          <div className="p-6">
-            <div className="text-center">
-              {/* QR Code */}
-              <div className="inline-block p-4 bg-white border-2 border-border rounded-lg mb-4">
-                <img
-                  src={qrCodeUrl}
-                  alt={`QR code containing asset information for ${asset?.name} with ID ${asset?.assetId}`}
-                  className="w-48 h-48 mx-auto"
-                />
-              </div>
-
-              {/* Asset Information */}
-              <div className="space-y-2 text-sm">
-                <div className="font-semibold text-foreground">{asset?.name}</div>
-                <div className="font-mono text-primary">{asset?.assetId}</div>
-                <div className="text-muted-foreground">S/N: {asset?.serialNumber}</div>
-                <div className="text-muted-foreground">{asset?.location}</div>
-              </div>
-
-              {/* QR Code Info */}
-              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
-                  <Icon name="Info" size={14} />
-                  <span>Scan to view asset details</span>
-                </div>
-              </div>
+          {/* QR Code and Info - this section will be printed */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-6 hidden print:block">Asset Details</h1>
+            <div className="bg-white p-4 inline-block rounded-lg border">
+              <QRCode value={qrCodeUrl} size={256} id="QRCodeSvg" />
+            </div>
+            <div className="mt-6 space-y-2">
+              <div className="text-xl font-semibold text-foreground">{asset?.product_name}</div>
+              <div className="text-lg text-muted-foreground font-mono">{asset?.asset_tag}</div>
+              <div className="text-sm text-muted-foreground font-mono pt-2">{qrCodeUrl}</div>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="flex space-x-3 p-6 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
-              Cancel
+          
+          {/* Action buttons - marked as no-print */}
+          <div className="no-print flex space-x-3 mt-6">
+            <Button variant="outline" iconName="Printer" onClick={handlePrint} className="flex-1">
+              Print
             </Button>
-            <Button
-              variant="default"
-              iconName="Printer"
-              onClick={handlePrint}
-              className="flex-1"
-            >
-              Print QR Code
+            <Button variant="default" iconName="Download" onClick={handleDownload} className="flex-1">
+              Download
             </Button>
           </div>
+
         </div>
       </div>
     </>

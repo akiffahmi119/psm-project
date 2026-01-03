@@ -23,6 +23,10 @@ const AssetDetailsSection = ({ register, errors }) => {
                 <option value="Printer">Printer</option>
                 <option value="Server">Server</option>
                 <option value="Network">Network</option>
+                <option value="Mobile">Mobile</option>
+                <option value="Tablet">Tablet</option>
+                <option value="Software">Software</option>
+                <option value="Other">Other</option>
             </select>
             {errors.category && <p className="text-xs text-red-500">{errors.category.message}</p>}
         </div>
@@ -36,16 +40,6 @@ const AssetDetailsSection = ({ register, errors }) => {
                 className={inputClass}
             />
             {errors.product_name && <p className="text-xs text-red-500">{errors.product_name.message}</p>}
-        </div>
-
-        {/* Model */}
-        <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Model</label>
-            <input 
-                {...register("model")} 
-                placeholder="e.g. Latitude 7420"
-                className={inputClass}
-            />
         </div>
 
         {/* Serial Number */}

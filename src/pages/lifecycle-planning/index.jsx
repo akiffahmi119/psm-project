@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
+import { useSelector } from 'react-redux';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { LoadingSpinner } from '../../components/ui/LoadingState';
 import DateRangeSelector from './components/DateRangeSelector';
@@ -15,7 +16,7 @@ import Button from '../../components/ui/Button';
 
 const LifecyclePlanning = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [selectedDateRange, setSelectedDateRange] = useState({
@@ -27,24 +28,8 @@ const LifecyclePlanning = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [activeScenario, setActiveScenario] = useState(null);
 
-  // Mock user data
-  const user = {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@panasonic.com",
-    role: "it_staff",
-    avatar: "https://images.unsplash.com/photo-1734991032476-bceab8383a59",
-    avatarAlt: "Professional headshot of woman with shoulder-length brown hair in business attire"
-  };
-
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Get actual user from Redux store
+  const { user } = useSelector((state) => state.auth);
 
   const handleSearch = (query) => {
     navigate(`/search-results?q=${encodeURIComponent(query)}`);

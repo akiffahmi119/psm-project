@@ -98,11 +98,11 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
             <tr>
               <th className="text-left p-4 font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('companyName')}
+                  onClick={() => handleSort('company_name')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
                   Company
-                  {sortConfig?.key === 'companyName' && (
+                  {sortConfig?.key === 'company_name' && (
                     <span className="text-xs">
                       {sortConfig?.direction === 'asc' ? '↑' : '↓'}
                     </span>
@@ -140,11 +140,11 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
               </th>
               <th className="text-left p-4 font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('totalValue')}
+                  onClick={() => handleSort('total_value')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
                   Total Value
-                  {sortConfig?.key === 'totalValue' && (
+                  {sortConfig?.key === 'total_value' && (
                     <span className="text-xs">
                       {sortConfig?.direction === 'asc' ? '↑' : '↓'}
                     </span>
@@ -153,11 +153,11 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
               </th>
               <th className="text-left p-4 font-medium text-muted-foreground">
                 <button
-                  onClick={() => handleSort('lastInteraction')}
+                  onClick={() => handleSort('last_interaction')}
                   className="flex items-center gap-2 hover:text-foreground transition-colors"
                 >
                   Last Contact
-                  {sortConfig?.key === 'lastInteraction' && (
+                  {sortConfig?.key === 'last_interaction' && (
                     <span className="text-xs">
                       {sortConfig?.direction === 'asc' ? '↑' : '↓'}
                     </span>
@@ -181,27 +181,26 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
               >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    {supplier?.image && (
+                    {supplier?.image_url && (
                       <img
-                        src={supplier?.image}
-                        alt={supplier?.imageAlt || `${supplier?.companyName} building`}
+                        src={supplier?.image_url}
+                        alt={`${supplier?.company_name} building`}
                         className="w-10 h-10 rounded-lg object-cover"
                       />
                     )}
                     <div>
                       <div className="font-medium text-foreground flex items-center gap-2">
-                        {supplier?.companyName}
-                        {supplier?.preferredVendor && (
+                        {supplier?.company_name}
+                        {supplier?.preferred_vendor && (
                           <span className="w-2 h-2 bg-primary rounded-full" title="Preferred Vendor" />
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground">{supplier?.category}</div>
                     </div>
                   </div>
                 </td>
                 <td className="p-4">
                   <div>
-                    <div className="font-medium text-foreground">{supplier?.contactPerson}</div>
+                    <div className="font-medium text-foreground">{supplier?.contact_person}</div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="w-3 h-3" />
                       {supplier?.email}
@@ -228,16 +227,16 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
                 <td className="p-4">
                   <div>
                     <div className="font-medium text-foreground">
-                      {formatCurrency(supplier?.totalValue)}
+                      {formatCurrency(supplier?.total_value)}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {supplier?.totalOrders} orders
+                      {supplier?.total_orders} orders
                     </div>
                   </div>
                 </td>
                 <td className="p-4">
                   <div className="text-sm text-foreground">
-                    {formatDate(supplier?.lastInteraction)}
+                    {formatDate(supplier?.last_interaction)}
                   </div>
                 </td>
                 <td className="p-4" onClick={(e) => e?.stopPropagation()}>

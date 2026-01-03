@@ -102,11 +102,11 @@ const Header = ({ user, onSearch, onNotificationClick, onProfileClick }) => {
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground px-3"
             >
               <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                {user?.name?.charAt(0) || 'U'}
+                {user?.full_name?.charAt(0) || 'U'}
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-sm font-medium text-foreground">
-                  {user?.name || 'User'}
+                  {user?.full_name || 'User'}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {user?.role || 'IT Staff'}
@@ -120,7 +120,7 @@ const Header = ({ user, onSearch, onNotificationClick, onProfileClick }) => {
               <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-lg shadow-modal z-200">
                 <div className="p-3 border-b border-border">
                   <div className="font-medium text-sm text-popover-foreground">
-                    {user?.name || 'User Name'}
+                    {user?.full_name || 'User Name'}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {user?.email || 'user@panasonic.com'}

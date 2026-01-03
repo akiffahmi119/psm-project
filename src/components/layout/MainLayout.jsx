@@ -1,35 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import Sidebar from '../ui/Sidebar';
 import Header from '../ui/Header';
+import { useSelector } from 'react-redux';
 
 const MainLayout = () => {
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [user, setUser] = useState({ name: 'User', role: 'it_staff' });
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  useEffect(() => {
-    const hydrateUser = () => {
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        } else {
-          // Only redirect if NOT already on login page (prevents loops)
-          if (location.pathname !== '/login') {
-            navigate('/login');
-          }
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    hydrateUser();
-  }, [navigate, location]);
+    const { user } = useSelector((state) => state.auth);
 
-  return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+  
+
+  
+
+    return (
+
+      <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar 
         user={user} 
         isCollapsed={isSidebarCollapsed} 

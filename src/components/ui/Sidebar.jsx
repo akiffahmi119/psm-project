@@ -34,7 +34,8 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       icon: 'Plus',
       roles: ['system_admin', 'it_staff'] // Changed 'admin' to 'system_admin'
     },
-    {
+    { 
+    
       label: 'Checkout Management',
       path: '/checkout-management',
       icon: 'UserCheck',
@@ -51,6 +52,18 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       path: '/lifecycle-planning',
       icon: 'TrendingUp',
       roles: ['system_admin', 'it_staff']
+    },
+    {
+      label: 'User Registration',
+      path: '/admin/user-registration',
+      icon: 'Users', // Assuming 'Users' is a valid icon
+      roles: ['system_admin']
+    },
+    {
+      label: 'Employee Management',
+      path: '/admin/employee-management',
+      icon: 'Users', // Assuming 'Users' is a valid icon
+      roles: ['system_admin']
     }
   ];
 

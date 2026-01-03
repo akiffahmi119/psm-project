@@ -13,10 +13,6 @@ const FilterToolbar = ({ filters, onFilterChange, suppliersCount }) => {
     onFilterChange({ status: e?.target?.value });
   };
 
-  const handleCategoryChange = (e) => {
-    onFilterChange({ category: e?.target?.value });
-  };
-
   const handleRatingChange = (e) => {
     onFilterChange({ rating: e?.target?.value });
   };
@@ -25,31 +21,17 @@ const FilterToolbar = ({ filters, onFilterChange, suppliersCount }) => {
     onFilterChange({
       search: '',
       status: 'all',
-      category: 'all',
       rating: 'all'
     });
   };
 
-  const hasActiveFilters = filters?.search || filters?.status !== 'all' || filters?.category !== 'all' || filters?.rating !== 'all';
+  const hasActiveFilters = filters?.search || filters?.status !== 'all' || filters?.rating !== 'all';
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
     { value: 'active', label: 'Active' },
     { value: 'pending', label: 'Pending' },
     { value: 'inactive', label: 'Inactive' }
-  ];
-
-  const categoryOptions = [
-    { value: 'all', label: 'All Categories' },
-    { value: 'Hardware', label: 'Hardware' },
-    { value: 'Software', label: 'Software' },
-    { value: 'Networking', label: 'Networking' },
-    { value: 'Office Supplies', label: 'Office Supplies' },
-    { value: 'Cloud Services', label: 'Cloud Services' },
-    { value: 'Security', label: 'Security' },
-    { value: 'Telecommunications', label: 'Telecommunications' },
-    { value: 'Furniture', label: 'Furniture' },
-    { value: 'Other', label: 'Other' }
   ];
 
   const ratingOptions = [
@@ -86,19 +68,6 @@ const FilterToolbar = ({ filters, onFilterChange, suppliersCount }) => {
             className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-w-[120px]"
           >
             {statusOptions?.map(option => (
-              <option key={option?.value} value={option?.value}>
-                {option?.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Category Filter */}
-          <select
-            value={filters?.category}
-            onChange={handleCategoryChange}
-            className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-w-[140px]"
-          >
-            {categoryOptions?.map(option => (
               <option key={option?.value} value={option?.value}>
                 {option?.label}
               </option>
@@ -170,17 +139,6 @@ const FilterToolbar = ({ filters, onFilterChange, suppliersCount }) => {
               Status: {filters?.status}
               <button
                 onClick={() => onFilterChange({ status: 'all' })}
-                className="hover:text-primary/80 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          )}
-          {filters?.category !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-md">
-              Category: {filters?.category}
-              <button
-                onClick={() => onFilterChange({ category: 'all' })}
                 className="hover:text-primary/80 transition-colors"
               >
                 <X className="w-3 h-3" />

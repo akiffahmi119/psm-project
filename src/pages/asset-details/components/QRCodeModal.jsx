@@ -1,96 +1,105 @@
 import React from 'react';
+import QRCode from 'react-qr-code';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
 const QRCodeModal = ({ asset, isOpen, onClose }) => {
   if (!isOpen) return null;
 
+  const qrCodeUrl = `${window.location.origin}/asset-details/${asset.id}`;
+
   const handlePrint = () => {
     window.print();
   };
-
+  
   const handleDownload = () => {
-    // In a real implementation, this would generate and download the QR code
-    console.log('Download QR code for asset:', asset?.id);
+    const svg = document.getElementById("QRCodeSvg");
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `${asset.asset_tag}_qrcode.png`;
+      downloadLink.href = `${pngFile}`;
+      downloadLink.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 z-300 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-foreground">Asset QR Code</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            iconName="X"
-            onClick={onClose}
-          />
-        </div>
+  const printStyles = `
+    @media print {
+      /* Hide elements that should not be printed */
+      .no-print {
+        display: none !important;
+      }
+      
+      /* Reset the layout for the modal content to be printable */
+      .printable-modal-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+    }
+  `;
 
-        {/* QR Code Display */}
-        <div className="text-center mb-6">
-          {/* Mock QR Code - In real implementation, use a QR code library */}
-          <div className="w-48 h-48 mx-auto bg-white border-2 border-border rounded-lg flex items-center justify-center mb-4">
-            <div className="w-40 h-40 bg-foreground rounded grid grid-cols-8 gap-1 p-2">
-              {Array.from({ length: 64 })?.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-full h-full ${
-                    Math.random() > 0.5 ? 'bg-white' : 'bg-foreground'
-                  }`}
-                />
-              ))}
+  return (
+    <>
+      <style>{printStyles}</style>
+      
+      {/* The modal container. The dark overlay is marked as no-print */}
+      <div className="no-print fixed inset-0 bg-black/50 z-300 flex items-center justify-center p-4">
+        
+        {/* The actual modal content panel */}
+        <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md printable-modal-content">
+          
+          {/* Header - marked as no-print */}
+          <div className="no-print flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">Asset QR Code</h3>
+            <Button variant="ghost" size="icon" iconName="X" onClick={onClose} />
+          </div>
+
+          {/* QR Code and Info - this section will be printed */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-6 hidden print:block">Asset Details</h1>
+            <div className="bg-white p-4 inline-block rounded-lg border">
+              <QRCode value={qrCodeUrl} size={256} id="QRCodeSvg" />
+            </div>
+            <div className="mt-6 space-y-2">
+              <div className="text-xl font-semibold text-foreground">{asset?.product_name}</div>
+              <div className="text-lg text-muted-foreground font-mono">{asset?.asset_tag}</div>
+              <div className="text-sm text-muted-foreground font-mono pt-2">{qrCodeUrl}</div>
             </div>
           </div>
           
-          {/* Asset Information */}
-          <div className="space-y-2 text-sm">
-            <div className="font-medium text-foreground">{asset?.name}</div>
-            <div className="text-muted-foreground">Asset ID: {asset?.id}</div>
-            <div className="text-muted-foreground">Serial: {asset?.serialNumber}</div>
-            <div className="text-muted-foreground font-mono text-xs">
-              panasonic-isd.com/asset/{asset?.id}
-            </div>
+          {/* Action buttons - marked as no-print */}
+          <div className="no-print flex space-x-3 mt-6">
+            <Button variant="outline" iconName="Printer" onClick={handlePrint} className="flex-1">
+              Print
+            </Button>
+            <Button variant="default" iconName="Download" onClick={handleDownload} className="flex-1">
+              Download
+            </Button>
           </div>
-        </div>
 
-        {/* Instructions */}
-        <div className="bg-muted/50 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-foreground mb-2 flex items-center">
-            <Icon name="Info" size={16} className="mr-2" />
-            QR Code Instructions
-          </h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Scan to quickly access asset details</li>
-            <li>• Print and attach to physical asset</li>
-            <li>• Use for inventory tracking and audits</li>
-          </ul>
-        </div>
-
-        {/* Actions */}
-        <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            iconName="Printer"
-            iconPosition="left"
-            onClick={handlePrint}
-            className="flex-1"
-          >
-            Print
-          </Button>
-          <Button
-            variant="default"
-            iconName="Download"
-            iconPosition="left"
-            onClick={handleDownload}
-            className="flex-1"
-          >
-            Download
-          </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

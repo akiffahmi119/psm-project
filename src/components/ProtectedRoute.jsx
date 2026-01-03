@@ -25,6 +25,8 @@ const ProtectedRoute = ({ allowedRoles }) => {
     // or is missing the role, we block access.
     const isAuthorized = !isRoleRequired || (userRole && allowedRoles.includes(userRole));
 
+
+
     if (isAuthorized) {
         return <Outlet />;
     } else {

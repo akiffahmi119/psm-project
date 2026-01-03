@@ -46,9 +46,9 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
   };
 
   const getContractStatus = () => {
-    if (!supplier?.contractEnd) return { status: 'No Contract', color: 'text-muted-foreground' };
+    if (!supplier?.contract_end) return { status: 'No Contract', color: 'text-muted-foreground' };
     
-    const endDate = new Date(supplier?.contractEnd);
+    const endDate = new Date(supplier?.contract_end);
     const today = new Date();
     const diffTime = endDate - today;
     const diffDays = Math?.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -88,17 +88,17 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
       <div className="p-6 border-b">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            {supplier?.image && (
+            {supplier?.image_url && (
               <img
-                src={supplier?.image}
-                alt={supplier?.imageAlt || `${supplier?.companyName} building`}
+                src={supplier?.image_url}
+                alt={`${supplier?.company_name} building`}
                 className="w-16 h-16 rounded-lg object-cover"
               />
             )}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-xl font-bold text-foreground">{supplier?.companyName}</h2>
-                {supplier?.preferredVendor && (
+                <h2 className="text-xl font-bold text-foreground">{supplier?.company_name}</h2>
+                {supplier?.preferred_vendor && (
                   <Award className="w-5 h-5 text-primary" title="Preferred Vendor" />
                 )}
               </div>
@@ -134,7 +134,7 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
               <User className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{supplier?.contactPerson}</span>
+              <span className="font-medium">{supplier?.contact_person}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Mail className="w-4 h-4 text-muted-foreground" />
@@ -189,15 +189,11 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total Orders</span>
-              <span className="text-sm font-medium">{supplier?.totalOrders}</span>
+              <span className="text-sm font-medium">{supplier?.total_orders}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total Value</span>
-              <span className="text-sm font-medium">{formatCurrency(supplier?.totalValue)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Category</span>
-              <span className="text-sm font-medium">{supplier?.category}</span>
+              <span className="text-sm font-medium">{formatCurrency(supplier?.total_value)}</span>
             </div>
           </div>
         </div>
@@ -217,20 +213,20 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Start Date</span>
-              <span className="text-sm font-medium">{formatDate(supplier?.contractStart)}</span>
+              <span className="text-sm font-medium">{formatDate(supplier?.contract_start)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">End Date</span>
-              <span className="text-sm font-medium">{formatDate(supplier?.contractEnd)}</span>
+              <span className="text-sm font-medium">{formatDate(supplier?.contract_end)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Payment Terms</span>
-              <span className="text-sm font-medium">{supplier?.paymentTerms}</span>
+              <span className="text-sm font-medium">{supplier?.payment_terms}</span>
             </div>
-            {supplier?.taxId && (
+            {supplier?.tax_id && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Tax ID</span>
-                <span className="text-sm font-medium">{supplier?.taxId}</span>
+                <span className="text-sm font-medium">{supplier?.tax_id}</span>
               </div>
             )}
           </div>
@@ -244,7 +240,7 @@ const SupplierDetailPanel = ({ supplier, onEdit }) => {
           </h3>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Last Interaction</span>
-            <span className="text-sm font-medium">{formatDate(supplier?.lastInteraction)}</span>
+            <span className="text-sm font-medium">{formatDate(supplier?.last_interaction)}</span>
           </div>
         </div>
 

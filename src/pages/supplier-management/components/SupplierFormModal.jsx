@@ -13,7 +13,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
     address: '',
     website: '',
     taxId: '',
-    category: '',
     paymentTerms: '',
     contractStart: '',
     contractEnd: '',
@@ -24,18 +23,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const categories = [
-    'Hardware',
-    'Software',
-    'Networking',
-    'Office Supplies',
-    'Cloud Services',
-    'Security',
-    'Telecommunications',
-    'Furniture',
-    'Other'
-  ];
 
   const paymentTermsOptions = [
     'Net 15',
@@ -55,20 +42,19 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
   useEffect(() => {
     if (supplier) {
       setFormData({
-        companyName: supplier?.companyName || '',
-        contactPerson: supplier?.contactPerson || '',
+        companyName: supplier?.company_name || '',
+        contactPerson: supplier?.contact_person || '',
         email: supplier?.email || '',
         phone: supplier?.phone || '',
         address: supplier?.address || '',
         website: supplier?.website || '',
-        taxId: supplier?.taxId || '',
-        category: supplier?.category || '',
-        paymentTerms: supplier?.paymentTerms || '',
-        contractStart: supplier?.contractStart || '',
-        contractEnd: supplier?.contractEnd || '',
+        taxId: supplier?.tax_id || '',
+        paymentTerms: supplier?.payment_terms || '',
+        contractStart: supplier?.contract_start || '',
+        contractEnd: supplier?.contract_end || '',
         status: supplier?.status || 'active',
         rating: supplier?.rating || 4.0,
-        preferredVendor: supplier?.preferredVendor || false,
+        preferredVendor: supplier?.preferred_vendor || false,
         notes: supplier?.notes || ''
       });
     } else {
@@ -80,7 +66,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
         address: '',
         website: '',
         taxId: '',
-        category: '',
         paymentTerms: '',
         contractStart: '',
         contractEnd: '',
@@ -112,10 +97,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
 
     if (!formData?.phone?.trim()) {
       newErrors.phone = 'Phone number is required';
-    }
-
-    if (!formData?.category) {
-      newErrors.category = 'Category is required';
     }
 
     if (formData?.website && !/^https?:\/\/.+/?.test(formData?.website)) {
@@ -267,29 +248,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
             <div>
               <h3 className="text-lg font-medium text-foreground mb-4">Business Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Category <span className="text-destructive">*</span>
-                  </label>
-                  <select
-                    value={formData?.category}
-                    onChange={handleInputChange('category')}
-                    className={cn(
-                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                      errors?.category && "border-destructive focus-visible:ring-destructive"
-                    )}
-                    disabled={isSubmitting}
-                  >
-                    <option value="">Select category</option>
-                    {categories?.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                  {errors?.category && (
-                    <p className="text-sm text-destructive mt-1">{errors?.category}</p>
-                  )}
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Payment Terms</label>
                   <select

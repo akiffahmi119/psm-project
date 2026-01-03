@@ -15,6 +15,8 @@ import Dashboard from './pages/dashboard';
 import Login from './pages/login';
 import CheckoutManagement from './pages/checkout-management';
 import SupplierManagement from './pages/supplier-management';
+import UserRegistration from 'pages/admin/UserRegistration';
+import EmployeeManagement from 'pages/admin/EmployeeManagement';
 
 const Routes = () => {
   return (
@@ -27,7 +29,7 @@ const Routes = () => {
 
           {/* --- Protected Routes --- */}
           {/* All routes inside this wrapper require login */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute allowedRoles={['system_admin']} />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
@@ -38,6 +40,10 @@ const Routes = () => {
             <Route path="/asset-list" element={<AssetListPage />} />
             <Route path="/asset-details" element={<AssetDetails />} />
             <Route path="/asset-registration" element={<AssetRegistration />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin/user-registration" element={<UserRegistration />} />
+            <Route path="/admin/employee-management" element={<EmployeeManagement />} />
           </Route>
 
           {/* Catch-all */}
