@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../../store/authSlice';
 import Icon from '../AppIcon';
 import Button from './Button';
 import Input from './Input';
+import { NotificationContainer } from './NotificationToast';
 
 
 const Header = ({ user, onSearch, onNotificationClick, onProfileClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const addNotification = (message, type) => {
+    setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
+  };
 
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
@@ -24,15 +36,25 @@ const Header = ({ user, onSearch, onNotificationClick, onProfileClick }) => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  const handleProfileAction = (action) => {
+  const handleProfileAction = async (action) => {
     setIsProfileOpen(false);
-    if (onProfileClick) {
+    if (action === 'logout') {
+      try {
+        addNotification('You have been successfully logged out.', 'success');
+        await dispatch(logoutUser()).unwrap();
+        setTimeout(() => navigate('/login'), 1500); 
+      } catch (error) {
+        console.error("Logout failed:", error);
+        addNotification('Logout failed. Please try again.', 'error');
+      }
+    } else if (onProfileClick) {
       onProfileClick(action);
     }
   };
 
   return (
     <header className="fixed top-0 right-0 left-0 lg:left-60 bg-card border-b border-border z-100 h-16">
+      <NotificationContainer notifications={notifications} onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
       <div className="flex items-center justify-between h-full px-6">
         {/* Mobile Menu Button */}
         <div className="lg:hidden">

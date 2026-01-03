@@ -59,8 +59,8 @@ const AssetDetails = () => {
         if (data) {
           const formattedAsset = {
             ...data,
-            location_name: data.department?.name || 'N/A',
-            supplier_name: data.supplier?.name || 'N/A',
+            location_name: data.department.name || 'N/A',
+            supplier_name: data.supplier.name || 'N/A',
             assigned_to_name: data.assigned_to?.full_name || 'Unassigned',
           };
           setAsset(formattedAsset);

@@ -25,6 +25,7 @@ const assetRegistrationSchema = z.object({
   warranty_months: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0)),
   supplier_id: z.string().min(1, "Supplier is required"),
   image_url: z.string().optional(),
+  status: z.string().min(1, "Status is required"),
 });
 
 const AssetRegistration = () => {
@@ -42,10 +43,12 @@ const AssetRegistration = () => {
 
   const user = { name: "Admin", role: "system_admin", email: "admin@pmma.com" };
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(assetRegistrationSchema),
-    defaultValues: { category: 'Laptop', warranty_months: 12 }
+    defaultValues: { category: 'Laptop', warranty_months: 12, status: 'In Storage' }
   });
+
+  console.log('Form Errors:', errors);
 
   // --- Fetch Reference Data & Asset Data for Editing ---
   useEffect(() => {
@@ -82,6 +85,7 @@ const AssetRegistration = () => {
             purchase_date: data.purchase_date ? new Date(data.purchase_date).toISOString().split('T')[0] : '',
             current_department_id: String(data.current_department_id),
             supplier_id: String(data.supplier_id),
+            status: data.status, // Set the status for editing
           };
           reset(formattedData);
           if (data.image_url) {
@@ -123,9 +127,10 @@ const AssetRegistration = () => {
       warranty_months: formData.warranty_months,
       supplier_id: parseInt(formData.supplier_id),
       current_department_id: parseInt(formData.current_department_id),
-      status: 'In Use', // Default status
       image_url: formData.image_url,
+      status: formData.status, // Always include status from form data
     };
+
 
     try {
       if (isEditMode) {
@@ -172,18 +177,20 @@ const AssetRegistration = () => {
               <LocationSection 
                 register={register} errors={errors} 
                 departments={departments}
+                control={control}
               />
               
               <FinancialSection 
                 register={register} errors={errors} 
                 suppliers={suppliers}
+                control={control}
               />
 
               <ImageUpload onUpload={handleImageUpload} initialImageUrl={imageUrl} />
 
               <div className="flex justify-end gap-3 pt-6 border-t">
                  <Button type="button" variant="outline" onClick={() => navigate('/asset-list')}>Cancel</Button>
-                 <Button type="submit" isLoading={isLoading}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
+                 <Button type="submit" isLoading={isSubmitting}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
               </div>
             </form>
           </div>

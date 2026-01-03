@@ -70,19 +70,39 @@ const AssetList = () => {
             window.history.replaceState({}, '');
         }
 
-        const fetchAssets = async () => {
+        const fetchAssetsAndSuppliers = async () => {
             setIsLoading(true);
             try {
-                const { data, error } = await supabase.from('assets').select(`*, departments ( name )`).order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
-                if (error) throw error;
-                setAssets(data);
+                const [
+                    { data: assetsData, error: assetsError },
+                    { data: suppliersData, error: suppliersError }
+                ] = await Promise.all([
+                    supabase.from('assets').select(`*, departments ( name )`).order(sortConfig.key, { ascending: sortConfig.direction === 'asc' }),
+                    supabase.from('suppliers').select('*')
+                ]);
+
+                if (assetsError) throw assetsError;
+                if (suppliersError) throw suppliersError;
+
+                const suppliersMap = suppliersData.reduce((acc, supplier) => {
+                    acc[supplier.id] = supplier;
+                    return acc;
+                }, {});
+
+                const joinedAssets = assetsData.map(asset => ({
+                    ...asset,
+                    suppliers: suppliersMap[asset.supplier_id]
+                }));
+                
+                setAssets(joinedAssets);
+
             } catch (error) {
-                addNotification(`Error fetching assets: ${error.message}`, 'error');
+                addNotification(`Error fetching data: ${error.message}`, 'error');
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchAssets();
+        fetchAssetsAndSuppliers();
     }, [sortConfig, location.state]);
     
     const handleDeleteAsset = async (asset) => {
@@ -220,7 +240,7 @@ const AssetList = () => {
                                                     </td>
                                                     <td className="px-6 py-4">{asset.category}</td>
                                                     <td className="px-6 py-4">{asset.departments?.name || 'Unknown'}</td>
-                                                    <td className="px-6 py-4 text-muted-foreground">{asset.suppliers?.name || 'Unknown'}</td>
+                                                    <td className="px-6 py-4 text-muted-foreground">{asset.suppliers?.company_name || 'Unknown'}</td>
                                                     <td className="px-6 py-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(asset.status)}`}>{asset.status}</span></td>
                                                     <td className="px-6 py-4 text-right font-medium">{asset.purchase_price ? `RM ${asset.purchase_price.toLocaleString()}` : '-'}</td>
                                                     <td className="px-6 py-4 text-center">

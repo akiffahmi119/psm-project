@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../../store/authSlice';
+import { useSelector } from 'react-redux';
 import { supabase } from '../../lib/supabaseClient'; // 1. Import Supabase
 import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
@@ -33,7 +32,6 @@ const Dashboard = () => {
   });
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   
   const { user: authUser } = useSelector((state) => state.auth);
 
@@ -88,6 +86,36 @@ const Dashboard = () => {
                 count: categoryMap[key] 
             }));
 
+            // --- Generate Trend Data for the Last 6 Months ---
+            const trendData = ((assets) => {
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const today = new Date();
+                const monthlyCounts = new Map();
+
+                // Initialize the map with the last 6 months
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                    const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+                    monthlyCounts.set(monthKey, 0);
+                }
+
+                // Populate the map with asset counts
+                assets.forEach(asset => {
+                    const assetDate = new Date(asset.created_at);
+                    // Check if the asset's creation date is within the last 6 months
+                    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+                    if (assetDate >= sixMonthsAgo) {
+                        const monthKey = `${monthNames[assetDate.getMonth()]} ${assetDate.getFullYear()}`;
+                        if (monthlyCounts.has(monthKey)) {
+                            monthlyCounts.set(monthKey, monthlyCounts.get(monthKey) + 1);
+                        }
+                    }
+                });
+
+                // Convert map to array for the chart
+                return Array.from(monthlyCounts, ([month, count]) => ({ month, count }));
+            })(assets);
+
             // Map Recent Activity (using newly added assets)
             const recentAssets = assets.slice(0, 5).map(asset => ({
                 id: asset.id,
@@ -105,7 +133,8 @@ const Dashboard = () => {
                 expiringCount,
                 assetsByStatus,
                 assetsByCategory,
-                recentAssets
+                recentAssets,
+                trendData,
             });
 
         } catch (error) {
@@ -162,16 +191,6 @@ const Dashboard = () => {
     }
   ];
 
-  // Keep Trend Data Mocked for now (until we have months of data)
-  const trendChartData = [
-    { month: 'May', count: 0 },
-    { month: 'Jun', count: 0 },
-    { month: 'Jul', count: 0 },
-    { month: 'Aug', count: 0 },
-    { month: 'Sep', count: 0 },
-    { month: 'Oct', count: realStats.totalAssets } // Show current total at end
-  ];
-
   const handleSearch = (query) => {
     navigate(`/search-results?q=${encodeURIComponent(query)}`);
   };
@@ -186,26 +205,11 @@ const Dashboard = () => {
     setNotifications((prev) => [...prev, newNotification]);
   };
 
-  const handleProfileClick = async (action) => {
+  const handleProfileClick = (action) => {
     const actions = {
       profile: () => console.log('Navigate to profile'),
       preferences: () => console.log('Navigate to preferences'),
       help: () => console.log('Navigate to help'),
-      logout: async () => {
-        try {
-          const notification = {
-            id: Date.now(),
-            message: "Logging out...",
-            type: "info",
-            duration: 1000
-          };
-          setNotifications((prev) => [...prev, notification]);
-          await dispatch(logoutUser()).unwrap();
-          navigate('/login');
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
-      }
     };
     if (actions?.[action]) actions?.[action]();
   };
@@ -281,7 +285,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <AssetStatusChart data={realStats.assetsByStatus} />
             <AssetCategoryChart data={realStats.assetsByCategory} />
-            <AssetTrendChart data={trendChartData} />
+            <AssetTrendChart data={realStats.trendData} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

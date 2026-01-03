@@ -94,7 +94,7 @@ const DetailsTab = ({ asset }) => {
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Department</span>
-                <span className="font-medium text-foreground">{asset?.department}</span>
+                <span className="font-medium text-foreground">{asset?.department?.name}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Assigned To</span>
@@ -132,7 +132,7 @@ const DetailsTab = ({ asset }) => {
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Supplier</span>
-                <span className="font-medium text-foreground">{asset?.supplier}</span>
+                <span className="font-medium text-foreground">{asset?.supplier?.name}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Purchase Order</span>

@@ -16,12 +16,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       icon: 'LayoutDashboard',
       roles: ['system_admin', 'it_staff', 'department_pic'] // Changed 'admin' to 'system_admin'
     },
-    {
-      label: 'Search',
-      path: '/search-results',
-      icon: 'Search',
-      roles: ['system_admin', 'it_staff', 'department_pic']
-    },
+
     {
       label: 'Asset List',
       path: '/asset-list',

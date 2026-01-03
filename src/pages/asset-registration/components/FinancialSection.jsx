@@ -1,7 +1,15 @@
 import React from 'react';
+import { Controller } from 'react-hook-form';
 import Icon from '../../../components/AppIcon';
 
-const FinancialSection = ({ register, errors, suppliers = [] }) => {
+const FinancialSection = ({ control, errors, suppliers = [] }) => {
+  const statusOptions = [
+    { value: 'In Storage', label: 'In Storage' },
+    { value: 'In Use', label: 'In Use' },
+    { value: 'Under Repair', label: 'Under Repair' },
+    { value: 'Retired', label: 'Retired' },
+  ];
+
   // Helper class for consistent input styling
   const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -18,15 +26,21 @@ const FinancialSection = ({ register, errors, suppliers = [] }) => {
             <label className="text-sm font-medium leading-none">
               Supplier <span className="text-red-500">*</span>
             </label>
-            <select 
-              {...register("supplier_id")} 
-              className={inputClass}
-            >
-                <option value="">Select Supplier</option>
-                {suppliers.map(sup => (
-                    <option key={sup.value} value={sup.value}>{sup.label}</option>
-                ))}
-            </select>
+            <Controller
+              name="supplier_id"
+              control={control}
+              render={({ field }) => (
+                <select 
+                  {...field}
+                  className={inputClass}
+                >
+                    <option value="">Select Supplier</option>
+                    {suppliers.map(sup => (
+                        <option key={sup.value} value={sup.value}>{sup.label}</option>
+                    ))}
+                </select>
+              )}
+            />
             {errors.supplier_id && (
               <p className="text-xs text-red-500 font-medium">{errors.supplier_id.message}</p>
             )}
@@ -41,7 +55,7 @@ const FinancialSection = ({ register, errors, suppliers = [] }) => {
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  {...register("purchase_price")} 
+                  {...control.register("purchase_price")} 
                   className={`${inputClass} pl-9`} // Add padding for "RM"
               />
             </div>
@@ -53,7 +67,7 @@ const FinancialSection = ({ register, errors, suppliers = [] }) => {
             <label className="text-sm font-medium leading-none">Purchase Date</label>
             <input 
                 type="date"
-                {...register("purchase_date")} 
+                {...control.register("purchase_date")} 
                 className={inputClass}
             />
             {errors.purchase_date && <p className="text-xs text-red-500">{errors.purchase_date.message}</p>}
@@ -65,10 +79,35 @@ const FinancialSection = ({ register, errors, suppliers = [] }) => {
             <input 
                 type="number"
                 placeholder="e.g. 12 or 24"
-                {...register("warranty_months")} 
+                {...control.register("warranty_months")} 
                 className={inputClass}
             />
              <p className="text-xs text-muted-foreground">Enter 0 if no warranty.</p>
+        </div>
+
+        {/* Status Dropdown */}
+        <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Status <span className="text-red-500">*</span>
+            </label>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <select 
+                  {...field}
+                  className={inputClass}
+                >
+                    <option value="">Select Status</option>
+                    {statusOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+              )}
+            />
+            {errors.status && (
+              <p className="text-xs text-red-500 font-medium">{errors.status.message}</p>
+            )}
         </div>
       </div>
     </div>
