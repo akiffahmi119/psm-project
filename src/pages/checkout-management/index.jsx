@@ -197,6 +197,7 @@ const CheckoutManagement = () => {
       expected_return_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     };
+    console.log('New loan object for employee:', newLoan);
 
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
@@ -235,6 +236,7 @@ const CheckoutManagement = () => {
       expected_return_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     };
+    console.log('New loan object for department:', newLoan);
 
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
