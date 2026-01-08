@@ -200,6 +200,7 @@ const CheckoutManagement = () => {
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
     if (loanError) {
+      console.error('Supabase Loan Error:', loanError);
       setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset: ${loanError.message}`, type: "error" }]);
     } else {
       const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
@@ -237,6 +238,7 @@ const CheckoutManagement = () => {
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
     if (loanError) {
+      console.error('Supabase Loan Error:', loanError);
       setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset to department: ${loanError.message}`, type: "error" }]);
     } else {
       const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
