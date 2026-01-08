@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import AppIcon from '../../../components/AppIcon';
-
+import { supabase } from '../../../lib/supabaseClient'; // Moved here
 
 const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,90 +10,46 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
 
-  // Mock employee data
-  const mockEmployees = [
-  {
-    id: 'EMP-001',
-    name: 'Michael Chen',
-    email: 'michael.chen@panasonic.com',
-    department: 'Engineering',
-    title: 'Senior Software Engineer',
-    phone: '+1 (555) 0123',
-    avatar: "https://images.unsplash.com/photo-1698072556534-40ec6e337311",
-    avatarAlt: 'Professional headshot of Asian man in blue shirt smiling',
-    location: 'Building A, Floor 3',
-    employeeId: 'ENG-001'
-  },
-  {
-    id: 'EMP-002',
-    name: 'Emily Watson',
-    email: 'emily.watson@panasonic.com',
-    department: 'Marketing',
-    title: 'Marketing Manager',
-    phone: '+1 (555) 0124',
-    avatar: "https://images.unsplash.com/photo-1728139877871-91d024a94f39",
-    avatarAlt: 'Professional headshot of woman with blonde hair in white blouse',
-    location: 'Building B, Floor 2',
-    employeeId: 'MKT-002'
-  },
-  {
-    id: 'EMP-003',
-    name: 'David Rodriguez',
-    email: 'david.rodriguez@panasonic.com',
-    department: 'Finance',
-    title: 'Financial Analyst',
-    phone: '+1 (555) 0125',
-    avatar: "https://images.unsplash.com/photo-1714974528885-f7f9c774ed7a",
-    avatarAlt: 'Professional headshot of Hispanic man in dark suit',
-    location: 'Building A, Floor 2',
-    employeeId: 'FIN-003'
-  },
-  {
-    id: 'EMP-004',
-    name: 'Sarah Kim',
-    email: 'sarah.kim@panasonic.com',
-    department: 'Engineering',
-    title: 'UX Designer',
-    phone: '+1 (555) 0126',
-    avatar: "https://images.unsplash.com/photo-1646041805292-fd77781436f9",
-    avatarAlt: 'Professional headshot of Asian woman with glasses in black jacket',
-    location: 'Building A, Floor 3',
-    employeeId: 'ENG-004'
-  },
-  {
-    id: 'EMP-005',
-    name: 'James Wilson',
-    email: 'james.wilson@panasonic.com',
-    department: 'Operations',
-    title: 'Operations Coordinator',
-    phone: '+1 (555) 0127',
-    avatar: "https://images.unsplash.com/photo-1727300805079-9c9ef920c75a",
-    avatarAlt: 'Professional headshot of Caucasian man in navy blazer',
-    location: 'Building C, Floor 1',
-    employeeId: 'OPS-005'
-  },
-  {
-    id: 'EMP-006',
-    name: 'Lisa Zhang',
-    email: 'lisa.zhang@panasonic.com',
-    department: 'HR',
-    title: 'HR Specialist',
-    phone: '+1 (555) 0128',
-    avatar: "https://images.unsplash.com/photo-1556335466-0adf089ac4ef",
-    avatarAlt: 'Professional headshot of Asian woman in white blouse smiling',
-    location: 'Building B, Floor 1',
-    employeeId: 'HR-006'
-  }];
-
-
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      setEmployees(mockEmployees);
-      setIsLoading(false);
-    }, 800);
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('employees')
+        .select(`
+          id,
+          full_name,
+          email,
+          phone_number,
+          avatar_url,
+          location,
+          employee_id_number,
+          departments (
+            name
+          )
+        `);
 
-    return () => clearTimeout(timer);
+      if (error) {
+        console.error('Error fetching employees:', error);
+        // Optionally add a notification for the error
+      } else {
+        const formattedEmployees = data.map(emp => ({
+          id: emp.id,
+          name: emp.full_name,
+          email: emp.email,
+          department: emp.departments ? emp.departments.name : 'N/A',
+          title: emp.title,
+          phone: emp.phone_number,
+          avatar: emp.avatar_url,
+          avatarAlt: `${emp.full_name}'s avatar`, // Placeholder alt text
+          location: emp.location,
+          employeeId: emp.employee_id_number,
+        }));
+        setEmployees(formattedEmployees);
+      }
+      setIsLoading(false);
+    };
+
+    fetchEmployees();
   }, []);
 
   // Filter employees based on search and department
@@ -106,8 +62,7 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
       employee?.name?.toLowerCase()?.includes(query) ||
       employee?.email?.toLowerCase()?.includes(query) ||
       employee?.employeeId?.toLowerCase()?.includes(query) ||
-      employee?.department?.toLowerCase()?.includes(query) ||
-      employee?.title?.toLowerCase()?.includes(query)
+      employee?.department?.toLowerCase()?.includes(query)
       );
     }
 
@@ -206,7 +161,6 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <h3 className="font-medium text-foreground truncate">{employee?.name}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{employee?.title}</p>
                         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <AppIcon name="Building" size={12} />
