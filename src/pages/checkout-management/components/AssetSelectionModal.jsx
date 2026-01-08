@@ -33,8 +33,8 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
   }, [assets, searchQuery, selectedCategory, selectedLocation]);
 
   // Get unique categories and locations
-  const categories = [...new Set(assets?.map(asset => asset?.category))]?.sort();
-  const locations = [...new Set(assets?.map(asset => asset?.location))]?.sort();
+  const categories = [...new Set(assets?.map(asset => asset?.category).filter(Boolean))]?.sort();
+  const locations = [...new Set(assets?.map(asset => asset?.location).filter(Boolean))]?.sort();
 
   const getConditionColor = (condition) => {
     switch (condition?.toLowerCase()) {
