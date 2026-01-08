@@ -193,6 +193,8 @@ const CheckoutManagement = () => {
     const newLoan = {
       asset_id: selectedAsset.id,
       employee_id: employee.id,
+      checkout_date: new Date().toISOString(),
+      expected_return_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     };
     console.log('New loan object for employee:', newLoan);
@@ -231,6 +233,8 @@ const CheckoutManagement = () => {
     const newLoan = {
       asset_id: selectedAsset.id,
       department_id: department.id, // Use department_id
+      checkout_date: new Date().toISOString(),
+      expected_return_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     };
     console.log('New loan object for department:', newLoan);
