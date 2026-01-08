@@ -19,10 +19,7 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
           id,
           full_name,
           email,
-          phone_number,
-          avatar_url,
-          location,
-          employee_id_number,
+          employee_number,
           departments (
             name
           )
@@ -37,12 +34,7 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
           name: emp.full_name,
           email: emp.email,
           department: emp.departments ? emp.departments.name : 'N/A',
-          title: emp.title,
-          phone: emp.phone_number,
-          avatar: emp.avatar_url,
-          avatarAlt: `${emp.full_name}'s avatar`, // Placeholder alt text
-          location: emp.location,
-          employeeId: emp.employee_id_number,
+          employeeId: emp.employee_number, // Corrected to use employee_number
         }));
         setEmployees(formattedEmployees);
       }
@@ -149,11 +141,7 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
               className="flex items-center gap-4 p-4 rounded-lg border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
               onClick={() => handleEmployeeSelect(employee)}>
 
-                  {/* Avatar */}
-                  <img
-                src={employee?.avatar}
-                alt={employee?.avatarAlt}
-                className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+
 
 
                   {/* Employee Info */}
@@ -166,10 +154,7 @@ const EmployeeSearchModal = ({ onEmployeeSelect, onClose }) => {
                             <AppIcon name="Building" size={12} />
                             {employee?.department}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <AppIcon name="MapPin" size={12} />
-                            {employee?.location}
-                          </span>
+
                         </div>
                       </div>
                       
