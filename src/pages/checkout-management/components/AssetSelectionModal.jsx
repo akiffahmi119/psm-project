@@ -59,7 +59,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
           <div>
             <h2 className="text-xl font-semibold text-foreground">Select Asset for Checkout</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Choose an asset from the available inventory
+              Choose an asset from the in storage inventory
             </p>
           </div>
           <Button variant="ghost" size="sm" iconName="X" onClick={onClose} />
@@ -90,7 +90,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
               onChange={(e) => setSelectedCategory(e?.target?.value)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <option value="">All Categories</option>
+              <option key="all-categories" value="">All Categories</option>
               {categories?.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -102,7 +102,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
               onChange={(e) => setSelectedLocation(e?.target?.value)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <option value="">All Locations</option>
+              <option key="all-locations" value="">All Locations</option>
               {locations?.map(location => (
                 <option key={location} value={location}>{location}</option>
               ))}
@@ -190,7 +190,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
               <h3 className="text-lg font-medium text-foreground mb-2">No Assets Found</h3>
               <p className="text-muted-foreground mb-4">
                 {searchQuery || selectedCategory || selectedLocation 
-                  ? 'Try adjusting your search criteria or filters.' :'No assets are currently available for checkout.'
+                  ? 'Try adjusting your search criteria or filters.' :'No assets are currently in storage for checkout.'
                 }
               </p>
               {(searchQuery || selectedCategory || selectedLocation) && (
