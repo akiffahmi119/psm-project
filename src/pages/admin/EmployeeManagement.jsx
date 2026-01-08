@@ -114,7 +114,7 @@ const EmployeeManagement = () => {
               <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
                 <tr>
                   <th scope="col" className="px-6 py-3">Name</th>
-                  <th scope="col" className="px-6 py-3">Employee #</th>
+                  <th scope="col" className="px-6 py-3">Employee ID</th>
                   <th scope="col" className="px-6 py-3">Department</th>
                   <th scope="col" className="px-6 py-3">Email</th>
                   <th scope="col" className="px-6 py-3 text-right">Actions</th>
