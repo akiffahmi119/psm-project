@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
 import { useSelector } from 'react-redux';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { DashboardSkeleton } from '../../components/ui/LoadingState';
@@ -15,7 +13,6 @@ import PerformanceMetrics from './components/PerformanceMetrics';
 
 const SupplierManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -73,8 +70,6 @@ const SupplierManagement = () => {
     setFilteredSuppliers(filtered);
   }, [suppliers, filters]);
 
-  const handleSearch = (query) => navigate(`/search-results?q=${encodeURIComponent(query)}`);
-  const handleProfileClick = (action) => console.log(action);
   const removeNotification = (id) => setNotifications((prev) => prev.filter((n) => n.id !== id));
 
   const handleAddSupplier = () => {
@@ -143,42 +138,31 @@ const SupplierManagement = () => {
 
   if (isLoading && suppliers.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <Sidebar isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} user={user} />
-        <Header user={user} onSearch={handleSearch} onProfileClick={handleProfileClick} />
-        <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} pt-16`}><div className="p-6"><DashboardSkeleton /></div></main>
-      </div>
+      <div className="p-6"><DashboardSkeleton /></div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} user={user} />
-      <Header user={user} onSearch={handleSearch} onProfileClick={handleProfileClick} />
-
-      <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} pt-16`}>
-        <div className="p-6 space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Supplier Management</h1>
-              <p className="text-muted-foreground">Manage vendor relationships and procurement workflows</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="default" iconName="Plus" iconPosition="left" onClick={handleAddSupplier}>Add Supplier</Button>
-            </div>
-          </div>
-          <PerformanceMetrics suppliers={suppliers} />
-          <FilterToolbar filters={filters} onFilterChange={handleFilterChange} suppliersCount={filteredSuppliers.length} />
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <SupplierTable suppliers={filteredSuppliers} selectedSupplier={selectedSupplier} onSupplierSelect={setSelectedSupplier} onSupplierEdit={handleEditSupplier} onSupplierDelete={handleDeleteSupplier} />
-            </div>
-            <div className="xl:col-span-1">
-              <SupplierDetailPanel supplier={selectedSupplier} onEdit={handleEditSupplier} />
-            </div>
-          </div>
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Supplier Management</h1>
+          <p className="text-muted-foreground">Manage vendor relationships and procurement workflows</p>
         </div>
-      </main>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="default" iconName="Plus" iconPosition="left" onClick={handleAddSupplier}>Add Supplier</Button>
+        </div>
+      </div>
+      <PerformanceMetrics suppliers={suppliers} />
+      <FilterToolbar filters={filters} onFilterChange={handleFilterChange} suppliersCount={filteredSuppliers.length} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <SupplierTable suppliers={filteredSuppliers} selectedSupplier={selectedSupplier} onSupplierSelect={setSelectedSupplier} onSupplierEdit={handleEditSupplier} onSupplierDelete={handleDeleteSupplier} />
+        </div>
+        <div className="xl:col-span-1">
+          <SupplierDetailPanel supplier={selectedSupplier} onEdit={handleEditSupplier} />
+        </div>
+      </div>
 
       <SupplierFormModal isOpen={isFormModalOpen} onClose={() => { setIsFormModalOpen(false); setEditingSupplier(null); }} supplier={editingSupplier} onSubmit={handleSupplierSubmit} />
       <NotificationContainer notifications={notifications} onRemove={removeNotification} />

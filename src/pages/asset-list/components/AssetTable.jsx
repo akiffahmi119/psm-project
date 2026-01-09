@@ -17,16 +17,16 @@ const AssetTable = ({
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'in_use':
+      case 'checked_out':
         return 'bg-success/10 text-success border-success/20';
       case 'in_storage':
         return 'bg-warning/10 text-warning border-warning/20';
-      case 'under_repair':
-        return 'bg-error/10 text-error border-error/20';
+      case 'in_repair':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'broken':
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'retired':
         return 'bg-muted text-muted-foreground border-border';
-      case 'lost':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -34,16 +34,16 @@ const AssetTable = ({
 
   const getStatusLabel = (status) => {
     switch (status?.toLowerCase()) {
-      case 'in_use':
-        return 'In Use';
+      case 'checked_out':
+        return 'Checked Out';
       case 'in_storage':
         return 'In Storage';
-      case 'under_repair':
-        return 'Under Repair';
+      case 'in_repair':
+        return 'In Repair';
+      case 'broken':
+        return 'Broken';
       case 'retired':
         return 'Retired';
-      case 'lost':
-        return 'Lost/Stolen';
       default:
         return status;
     }
@@ -189,7 +189,7 @@ const AssetTable = ({
                 
                 <td className="p-4">
                   <div>
-                    <div className="font-medium text-foreground">{asset?.name}</div>
+                    <div className="font-medium text-foreground">{asset?.product_name}</div>
                     <div className="text-sm text-muted-foreground">{asset?.model}</div>
                   </div>
                 </td>
@@ -265,7 +265,7 @@ const AssetTable = ({
                   <div className="font-mono text-sm text-primary font-medium">
                     {asset?.assetId}
                   </div>
-                  <div className="font-medium text-foreground">{asset?.name}</div>
+                  <div className="font-medium text-foreground">{asset?.product_name}</div>
                 </div>
               </div>
               

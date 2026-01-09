@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 import AppImage from '../../../components/AppImage';
 import { supabase } from '../../../lib/supabaseClient';
+import { formatAssetStatus } from '../../../utils/formatters';
 
 const AssetDetailPanel = ({ asset, onClose, onEdit, onAssetUpdate }) => {
   if (!asset) return null;
@@ -59,11 +60,15 @@ const AssetDetailPanel = ({ asset, onClose, onEdit, onAssetUpdate }) => {
     }
   };
 
+
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 'In Use': return 'bg-green-100 text-green-800 border-green-200';
-      case 'In Storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Retired': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'checked_out': return 'bg-green-100 text-green-800 border-green-200';
+      case 'in_storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'in_repair': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'broken': return 'bg-red-100 text-red-800 border-red-200';
+      case 'retired': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-blue-100 text-blue-800 border-blue-200';
     }
   };
@@ -102,7 +107,7 @@ const AssetDetailPanel = ({ asset, onClose, onEdit, onAssetUpdate }) => {
               <div className="flex items-center space-x-2">
                 <p className="text-sm text-muted-foreground font-mono">{asset.asset_tag}</p>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(asset.status)}`}>
-                  {asset.status}
+                  {formatAssetStatus(asset.status)}
                 </span>
               </div>
             </div>
@@ -171,3 +176,4 @@ const AssetDetailPanel = ({ asset, onClose, onEdit, onAssetUpdate }) => {
 };
 
 export default AssetDetailPanel;
+

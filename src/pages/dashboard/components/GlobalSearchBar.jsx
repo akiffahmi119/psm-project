@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../../lib/supabaseClient';
 import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 
@@ -10,15 +11,7 @@ const GlobalSearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
-
-  // Mock search suggestions
-  const mockSuggestions = [
-    { id: 'AST-001', type: 'asset', name: 'Dell Laptop OptiPlex 7090', category: 'Laptop' },
-    { id: 'AST-002', type: 'asset', name: 'HP Printer LaserJet Pro', category: 'Printer' },
-    { id: 'AST-003', type: 'asset', name: 'Cisco Router ISR4331', category: 'Network Equipment' },
-    { id: 'SN123456', type: 'serial', name: 'Serial: SN123456 - Monitor Dell U2720Q', category: 'Monitor' },
-    { id: 'MDL-HP-001', type: 'model', name: 'Model: HP EliteBook 840 G8', category: 'Laptop' }
-  ];
+  const debounceTimeout = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -31,30 +24,45 @@ const GlobalSearchBar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSearchChange = (e) => {
-    const query = e?.target?.value;
-    setSearchQuery(query);
-
-    if (query?.length > 2) {
+  const fetchSuggestions = async (query) => {
+    if (query.length > 2) {
       setIsLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
-        const filtered = mockSuggestions?.filter(item =>
-          item?.name?.toLowerCase()?.includes(query?.toLowerCase()) ||
-          item?.id?.toLowerCase()?.includes(query?.toLowerCase())
-        );
-        setSuggestions(filtered);
+      try {
+        const { data, error } = await supabase.rpc('global_search', {
+          search_term: query
+        });
+
+        if (error) throw error;
+        
+        setSuggestions(data || []);
         setShowSuggestions(true);
+      } catch (error) {
+        console.error('Error fetching search suggestions:', error);
+        setSuggestions([]);
+      } finally {
         setIsLoading(false);
-      }, 300);
+      }
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
-      setIsLoading(false);
     }
   };
 
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      fetchSuggestions(query);
+    }, 300); // 300ms debounce delay
+  };
+
   const handleSearchSubmit = (e) => {
+    console.log('handleSearchSubmit called');
     e?.preventDefault();
     if (searchQuery?.trim()) {
       navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
@@ -63,10 +71,8 @@ const GlobalSearchBar = () => {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    if (suggestion?.type === 'asset') {
-      navigate(`/asset-details/${suggestion?.id}`);
-    } else {
-      navigate(`/search-results?q=${encodeURIComponent(suggestion?.id)}`);
+    if (suggestion.path) {
+      navigate(suggestion.path);
     }
     setSearchQuery('');
     setShowSuggestions(false);
@@ -76,10 +82,12 @@ const GlobalSearchBar = () => {
     switch (type) {
       case 'asset':
         return 'Package';
-      case 'serial':
-        return 'Hash';
-      case 'model':
-        return 'Tag';
+      case 'employee':
+        return 'User';
+      case 'department':
+        return 'Building';
+      case 'supplier':
+        return 'Truck';
       default:
         return 'Search';
     }
@@ -91,7 +99,7 @@ const GlobalSearchBar = () => {
         <div className="relative">
           <Input
             type="search"
-            placeholder="Search assets by ID, serial number, or model..."
+            placeholder="Search for assets, employees, suppliers..."
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => searchQuery?.length > 2 && setShowSuggestions(true)}
@@ -131,8 +139,8 @@ const GlobalSearchBar = () => {
                   <p className="text-sm font-medium text-foreground truncate">
                     {suggestion?.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {suggestion?.category} • ID: {suggestion?.id}
+                  <p className="text-xs text-muted-foreground truncate">
+                    {suggestion?.description}
                   </p>
                 </div>
                 <Icon name="ArrowRight" size={14} className="text-muted-foreground flex-shrink-0" />
@@ -146,13 +154,13 @@ const GlobalSearchBar = () => {
         <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-lg shadow-modal z-200">
           <div className="p-4 text-center">
             <Icon name="Search" size={24} className="text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No assets found for "{searchQuery}"</p>
-            <p className="text-xs text-muted-foreground mt-1">Try searching by asset ID, serial number, or model</p>
+            <p className="text-sm text-muted-foreground">No results found for "{searchQuery}"</p>
           </div>
         </div>
       )}
     </div>
   );
 };
+
 
 export default GlobalSearchBar;

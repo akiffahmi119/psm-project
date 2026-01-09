@@ -2,13 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import { supabase } from '../../lib/supabaseClient';
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { DashboardSkeleton } from '../../components/ui/LoadingState';
 import AssetDetailPanel from './components/AssetDetailPanel';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
+import { formatAssetStatus } from '../../utils/formatters';
 
 // --- QR Code Modal Component ---
 const QRCodeModal = ({ asset, onClose }) => {
@@ -48,7 +47,6 @@ const QRCodeModal = ({ asset, onClose }) => {
 const AssetList = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [assets, setAssets] = useState([]);
     const [filterCategory, setFilterCategory] = useState('All');
@@ -57,8 +55,6 @@ const AssetList = () => {
     const [qrAsset, setQrAsset] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [notifications, setNotifications] = useState([]);
-
-    const user = { name: "Admin", role: "system_admin", email: "admin@pmma.com" };
 
     const addNotification = (message, type) => {
         setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
@@ -157,9 +153,11 @@ const AssetList = () => {
 
     const getStatusColor = (status) => {
         switch(status) {
-            case 'In Use': return 'bg-green-100 text-green-800 border-green-200';
-            case 'In Storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'Retired': return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'checked_out': return 'bg-green-100 text-green-800 border-green-200';
+            case 'in_storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'in_repair': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'broken': return 'bg-red-100 text-red-800 border-red-200';
+            case 'retired': return 'bg-gray-100 text-gray-800 border-gray-200';
             default: return 'bg-blue-100 text-blue-800 border-blue-200';
         }
     };
@@ -167,100 +165,92 @@ const AssetList = () => {
     const allCategories = ["Laptop", "Desktop", "Monitor", "Printer", "Server", "Network", "Mobile", "Tablet", "Software", "Other"];
 
     return (
-        <div className="min-h-screen bg-background">
-            <Sidebar isCollapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} user={user} />
+        <div className="p-6">
             <NotificationContainer notifications={notifications} onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
-            
-            <div className={`main-content transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'}`}>
-                <Header user={user} />
+            <div className="space-y-6">
                 
-                <main className="pt-16 p-6">
-                    <div className="space-y-6">
-                        
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-foreground">Asset List</h1>
-                                <p className="text-muted-foreground">Real-time inventory from database.</p>
-                            </div>
-                            <Button iconName="Plus" onClick={() => navigate('/asset-registration')}>Add New Asset</Button>
-                        </div>
-
-                        <div className="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row gap-4">
-                            <div className="relative flex-1">
-                                <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search by Tag, Name, or Serial..." 
-                                    className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <select 
-                                className="px-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                            >
-                                <option value="All">All Categories</option>
-                                {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-                            {isLoading ? (
-                                <div className="p-6"><DashboardSkeleton /></div>
-                            ) : sortedAndFilteredAssets.length === 0 ? (
-                                <div className="p-12 text-center text-muted-foreground">
-                                    <Icon name="Package" size={48} className="mx-auto mb-4 opacity-20" />
-                                    <p>No assets found.</p>
-                                    <p className="text-xs mt-2">Try adjusting your search or add a new asset.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
-                                            <tr>
-                                                <th className="px-6 py-4 font-medium">Asset Tag</th>
-                                                <th className="px-6 py-4 font-medium">Product Details</th>
-                                                <th className="px-6 py-4 font-medium"><button onClick={() => handleSort('category')} className="flex items-center gap-2">Category<Icon name={getSortIcon('category')} size={14} /></button></th>
-                                                <th className="px-6 py-4 font-medium">Department</th>
-                                                <th className="px-6 py-4 font-medium">Supplier</th>
-                                                <th className="px-6 py-4 font-medium">Status</th>
-                                                <th className="px-6 py-4 font-medium text-right">Price</th>
-                                                <th className="px-6 py-4 font-medium text-center">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-border">
-                                            {sortedAndFilteredAssets.map((asset) => (
-                                                <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
-                                                    <td className="px-6 py-4"><button onClick={() => handleAssetClick(asset)} className="font-medium text-primary hover:underline">{asset.asset_tag}</button></td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="font-medium text-foreground">{asset.product_name}</div>
-                                                        <div className="text-xs text-muted-foreground">{asset.serial_number}</div>
-                                                    </td>
-                                                    <td className="px-6 py-4">{asset.category}</td>
-                                                    <td className="px-6 py-4">{asset.departments?.name || 'Unknown'}</td>
-                                                    <td className="px-6 py-4 text-muted-foreground">{asset.suppliers?.company_name || 'Unknown'}</td>
-                                                    <td className="px-6 py-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(asset.status)}`}>{asset.status}</span></td>
-                                                    <td className="px-6 py-4 text-right font-medium">{asset.purchase_price ? `RM ${asset.purchase_price.toLocaleString()}` : '-'}</td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <Button variant="ghost" size="icon" onClick={() => navigate(`/asset-registration?id=${asset.id}`)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="Pencil" size={16} /></Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleOpenQrModal(asset)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="QrCode" size={16} /></Button>
-                                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteAsset(asset)} className="h-8 w-8 text-muted-foreground hover:text-destructive"><Icon name="Trash" size={16} /></Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground text-center mt-4">
-                            Showing {sortedAndFilteredAssets.length} total assets
-                        </div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">Asset List</h1>
+                        <p className="text-muted-foreground">Real-time inventory from database.</p>
                     </div>
-                </main>
+                    <Button iconName="Plus" onClick={() => navigate('/asset-registration')}>Add New Asset</Button>
+                </div>
+
+                <div className="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <input 
+                            type="text" 
+                            placeholder="Search by Tag, Name, or Serial..." 
+                            className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <select 
+                        className="px-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                    >
+                        <option value="All">All Categories</option>
+                        {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                </div>
+
+                <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+                    {isLoading ? (
+                        <div className="p-6"><DashboardSkeleton /></div>
+                    ) : sortedAndFilteredAssets.length === 0 ? (
+                        <div className="p-12 text-center text-muted-foreground">
+                            <Icon name="Package" size={48} className="mx-auto mb-4 opacity-20" />
+                            <p>No assets found.</p>
+                            <p className="text-xs mt-2">Try adjusting your search or add a new asset.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
+                                    <tr>
+                                        <th className="px-6 py-4 font-medium">Asset Tag</th>
+                                        <th className="px-6 py-4 font-medium">Product Details</th>
+                                        <th className="px-6 py-4 font-medium"><button onClick={() => handleSort('category')} className="flex items-center gap-2">Category<Icon name={getSortIcon('category')} size={14} /></button></th>
+                                        <th className="px-6 py-4 font-medium">Department</th>
+                                        <th className="px-6 py-4 font-medium">Supplier</th>
+                                        <th className="px-6 py-4 font-medium">Status</th>
+                                        <th className="px-6 py-4 font-medium text-right">Price</th>
+                                        <th className="px-6 py-4 font-medium text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {sortedAndFilteredAssets.map((asset) => (
+                                        <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-6 py-4"><button onClick={() => handleAssetClick(asset)} className="font-medium text-primary hover:underline">{asset.asset_tag}</button></td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-foreground">{asset.product_name}</div>
+                                                <div className="text-xs text-muted-foreground">{asset.serial_number}</div>
+                                            </td>
+                                            <td className="px-6 py-4">{asset.category}</td>
+                                            <td className="px-6 py-4">{asset.departments?.name || 'Unknown'}</td>
+                                            <td className="px-6 py-4 text-muted-foreground">{asset.suppliers?.company_name || 'Unknown'}</td>
+                                            <td className="px-6 py-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(asset.status)}`}>{formatAssetStatus(asset.status)}</span></td>
+                                            <td className="px-6 py-4 text-right font-medium">{asset.purchase_price ? `RM ${asset.purchase_price.toLocaleString()}` : '-'}</td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Button variant="ghost" size="icon" onClick={() => navigate(`/asset-registration?id=${asset.id}`)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="Pencil" size={16} /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleOpenQrModal(asset)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="QrCode" size={16} /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteAsset(asset)} className="h-8 w-8 text-muted-foreground hover:text-destructive"><Icon name="Trash" size={16} /></Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+                
+                <div className="text-xs text-muted-foreground text-center mt-4">
+                    Showing {sortedAndFilteredAssets.length} total assets
+                </div>
             </div>
             
             {selectedAsset && <AssetDetailPanel asset={selectedAsset} onClose={closePanel} onEdit={() => { navigate(`/asset-registration?id=${selectedAsset.id}`); closePanel(); }} onAssetUpdate={handleAssetUpdate} />}

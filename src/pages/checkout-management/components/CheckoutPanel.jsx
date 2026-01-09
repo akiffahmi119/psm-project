@@ -24,7 +24,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
     // Apply search filter (could be used for asset name search)
     if (filters?.employee) { // Reusing employee filter as general search
       filtered = filtered?.filter(asset =>
-        asset?.name?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
+        asset?.product_name?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
         asset?.serialNumber?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
         asset?.location?.toLowerCase()?.includes(filters?.employee?.toLowerCase())
       );
@@ -109,7 +109,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
     return (
       <div className="text-center py-12">
         <AppIcon name="Package" size={48} className="mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">No Assets Available</h3>
+        <h3 className="text-lg font-medium text-foreground mb-2">No Assets In Storage</h3>
         <p className="text-muted-foreground mb-6">
           {assets?.length ? 'No assets match your current filters.' : 'All assets are currently checked out.'}
         </p>
@@ -128,7 +128,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground">
-            {filteredAssets?.length} asset{filteredAssets?.length !== 1 ? 's' : ''} available
+            {filteredAssets?.length} asset{filteredAssets?.length !== 1 ? 's' : ''} in storage
           </span>
           
           {selectedAssets?.length > 0 && (
@@ -192,7 +192,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
                 {asset?.image ? (
                   <img
                     src={asset?.image}
-                    alt={asset?.imageAlt || `${asset?.name} asset image`}
+                    alt={asset?.imageAlt || `${asset?.product_name} asset image`}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -229,7 +229,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
               {/* Asset Info */}
               <div className="space-y-2">
                 <div>
-                  <h3 className="font-medium text-foreground line-clamp-1">{asset?.name}</h3>
+                  <h3 className="font-medium text-foreground line-clamp-1">{asset?.product_name}</h3>
                   <p className="text-sm text-muted-foreground">{asset?.category}</p>
                 </div>
                 
@@ -321,7 +321,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
                       {asset?.image ? (
                         <img
                           src={asset?.image}
-                          alt={asset?.imageAlt || `${asset?.name} asset image`}
+                          alt={asset?.imageAlt || `${asset?.product_name} asset image`}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -331,7 +331,7 @@ const CheckoutPanel = ({ assets, filters, onAssetSelect, onBulkOperation }) => {
                       )}
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground">{asset?.name}</h4>
+                      <h4 className="font-medium text-foreground">{asset?.product_name}</h4>
                       <p className="text-sm text-muted-foreground">{asset?.serialNumber}</p>
                     </div>
                   </div>

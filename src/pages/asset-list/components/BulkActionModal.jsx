@@ -4,6 +4,8 @@ import Select from '../../../components/ui/Select';
 import Input from '../../../components/ui/Input';
 import Icon from '../../../components/AppIcon';
 
+import { formatAssetStatus } from '../../../utils/formatters';
+
 const BulkActionModal = ({ 
   isOpen, 
   onClose, 
@@ -21,11 +23,11 @@ const BulkActionModal = ({
   if (!isOpen) return null;
 
   const statusOptions = [
-    { value: 'in_use', label: 'In Use' },
-    { value: 'in_storage', label: 'In Storage' },
-    { value: 'under_repair', label: 'Under Repair' },
-    { value: 'retired', label: 'Retired' },
-    { value: 'lost', label: 'Lost/Stolen' }
+    { value: 'checked_out', label: formatAssetStatus('checked_out') },
+    { value: 'in_storage', label: formatAssetStatus('in_storage') },
+    { value: 'in_repair', label: formatAssetStatus('in_repair') },
+    { value: 'retired', label: formatAssetStatus('retired') },
+    { value: 'lost', label: formatAssetStatus('lost') }
   ];
 
   const locationOptions = [

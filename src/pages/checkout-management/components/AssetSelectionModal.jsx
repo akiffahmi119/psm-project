@@ -15,7 +15,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
 
     if (searchQuery) {
       filtered = filtered?.filter(asset =>
-        asset?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+        asset?.product_name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
         asset?.serialNumber?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
         asset?.category?.toLowerCase()?.includes(searchQuery?.toLowerCase())
       );
@@ -125,7 +125,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
                     {asset?.image ? (
                       <img
                         src={asset?.image}
-                        alt={asset?.imageAlt || `${asset?.name} asset image`}
+                        alt={asset?.imageAlt || `${asset?.product_name} asset image`}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -148,7 +148,7 @@ const AssetSelectionModal = ({ assets, onAssetSelect, onClose }) => {
                   {/* Asset Details */}
                   <div className="space-y-2">
                     <div>
-                      <h3 className="font-medium text-foreground line-clamp-1">{asset?.name}</h3>
+                      <h3 className="font-medium text-foreground line-clamp-1">{asset?.product_name}</h3>
                       <p className="text-sm text-muted-foreground">{asset?.category}</p>
                     </div>
 

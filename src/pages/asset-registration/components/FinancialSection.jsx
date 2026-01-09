@@ -2,13 +2,7 @@ import React from 'react';
 import { Controller } from 'react-hook-form';
 import Icon from '../../../components/AppIcon';
 
-const FinancialSection = ({ control, errors, suppliers = [] }) => {
-  const statusOptions = [
-    { value: 'In Storage', label: 'In Storage' },
-    { value: 'In Use', label: 'In Use' },
-    { value: 'Under Repair', label: 'Under Repair' },
-    { value: 'Retired', label: 'Retired' },
-  ];
+const FinancialSection = ({ control, errors, suppliers = [], isEditMode, asset }) => {
 
   // Helper class for consistent input styling
   const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -85,30 +79,54 @@ const FinancialSection = ({ control, errors, suppliers = [] }) => {
              <p className="text-xs text-muted-foreground">Enter 0 if no warranty.</p>
         </div>
 
-        {/* Status Dropdown */}
+        {/* Lifespan (Years) */}
         <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Status <span className="text-red-500">*</span>
-            </label>
+            <label className="text-sm font-medium leading-none">Lifespan (Years)</label>
             <Controller
-              name="status"
+              name="lifespan_years"
               control={control}
               render={({ field }) => (
                 <select 
                   {...field}
                   className={inputClass}
                 >
-                    <option value="">Select Status</option>
-                    {statusOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                    <option value="0">Not Applicable</option>
+                    {[...Array(10).keys()].map(i => (
+                        <option key={i + 1} value={i + 1}>{i + 1} Year(s)</option>
                     ))}
                 </select>
               )}
             />
-            {errors.status && (
-              <p className="text-xs text-red-500 font-medium">{errors.status.message}</p>
+            {errors.lifespan_years && (
+              <p className="text-xs text-red-500 font-medium">{errors.lifespan_years.message}</p>
             )}
         </div>
+
+        {isEditMode && asset && (asset.status === 'in_storage' || asset.status === 'checked_out') && (
+          <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                Update Status
+              </label>
+              <Controller
+                name="status"
+                control={control}
+                defaultValue={asset.status}
+                render={({ field }) => (
+                  <select 
+                    {...field}
+                    className={inputClass}
+                  >
+                      <option value={asset.status}>{asset.status}</option>
+                      <option value="broken">Broken</option>
+                      <option value="in_repair">In Repair</option>
+                  </select>
+                )}
+              />
+              {errors.status && (
+                <p className="text-xs text-red-500 font-medium">{errors.status.message}</p>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );

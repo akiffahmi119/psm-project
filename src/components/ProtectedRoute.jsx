@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import LoadingState from './ui/LoadingState'; 
 
-const ProtectedRoute = ({ allowedRoles }) => {
+const ProtectedRoute = ({ allowedRoles, children }) => {
     const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
     const location = useLocation();
 
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
 
 
     if (isAuthorized) {
-        return <Outlet />;
+        return children || <Outlet />;
     } else {
         // Access Denied Screen (Instead of infinite loop)
         return (

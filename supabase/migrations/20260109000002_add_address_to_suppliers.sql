@@ -2,4 +2,4 @@
 -- Adds the missing 'address' column to the public.suppliers table.
 
 ALTER TABLE public.suppliers
-ADD COLUMN address TEXT;
+ADD COLUMN IF NOT EXISTS address TEXT;

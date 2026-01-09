@@ -15,5 +15,8 @@ CREATE POLICY "Allow Employee to read their department assets"
   TO authenticated
   USING (
     (auth.jwt() -> 'user_metadata' ->> 'role') = 'employee' AND
-    (auth.jwt() -> 'user_metadata' ->> 'department_name') = assets.department
+    assets.current_department_id = (
+      SELECT id FROM public.departments
+      WHERE name = (auth.jwt() -> 'user_metadata' ->> 'department_name')
+    )
   );

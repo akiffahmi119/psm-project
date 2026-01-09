@@ -29,7 +29,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       icon: 'Plus',
       roles: ['system_admin', 'it_staff'] // Changed 'admin' to 'system_admin'
     },
-    { 
+    {
     
       label: 'Checkout Management',
       path: '/checkout-management',
@@ -51,14 +51,20 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
     {
       label: 'User Registration',
       path: '/admin/user-registration',
-      icon: 'Users', // Assuming 'Users' is a valid icon
+      icon: 'UserCog', // Assuming 'UserCog' is a valid icon
       roles: ['system_admin']
     },
     {
       label: 'Employee Management',
       path: '/admin/employee-management',
       icon: 'Users', // Assuming 'Users' is a valid icon
-      roles: ['system_admin']
+      roles: ['system_admin', 'manager']
+    },
+    {
+      label: 'Department Management',
+      path: '/admin/department-management',
+      icon: 'Building2',
+      roles: ['system_admin', 'manager']
     }
   ];
 
@@ -79,10 +85,21 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
   });
 
   const isActive = (path) => {
+    const { pathname, search } = location;
+
     if (path === '/dashboard') {
-      return location?.pathname === '/' || location?.pathname === '/dashboard';
+      return pathname === '/' || pathname === '/dashboard';
     }
-    return location?.pathname?.startsWith(path);
+
+    if (path === '/asset-registration') {
+      return pathname === '/asset-registration' && !search.includes('id=');
+    }
+
+    if (path === '/asset-list') {
+      return pathname.startsWith('/asset-list') || (pathname === '/asset-registration' && search.includes('id='));
+    }
+    
+    return pathname.startsWith(path);
   };
 
   return (
@@ -167,17 +184,17 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
             {isCollapsed ? (
               <div className="flex justify-center">
                 <div className="w-8 h-8 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                  {user?.name?.charAt(0) || 'U'}
+                  {user?.full_name?.charAt(0) || 'U'}
                 </div>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-muted text-muted-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                  {user?.name?.charAt(0) || 'U'}
+                  {user?.full_name?.charAt(0) || 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-foreground truncate">
-                    {user?.name || 'User'}
+                    {user?.full_name || 'User'}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {user?.role === 'system_admin' ? 'System Admin' : user?.role || 'IT Staff'}

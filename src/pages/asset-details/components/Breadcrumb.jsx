@@ -9,7 +9,7 @@ const Breadcrumb = ({ asset }) => {
   const breadcrumbItems = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Asset List', path: '/asset-list' },
-    { label: asset?.name || 'Asset Details', path: null }
+    { label: asset?.product_name || 'Asset Details', path: null }
   ];
 
   return (

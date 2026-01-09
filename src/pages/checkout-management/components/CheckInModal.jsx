@@ -115,7 +115,7 @@ const CheckInModal = ({ loan, onCheckIn, onClose }) => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Employee:</span>
-                  <span className="font-medium text-foreground">{loan?.employee?.name}</span>
+                  <span className="font-medium text-foreground">{loan?.employee?.full_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Department:</span>

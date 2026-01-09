@@ -2,11 +2,7 @@
 -- Adds RLS policies for the loans table
 
 -- 1. Allow authenticated users to read loans
-CREATE POLICY "Allow authenticated users to read loans"
-ON public.loans
-FOR SELECT
-TO authenticated
-USING (true);
+
 
 -- 2. Allow IT staff and admins to create loans
 CREATE POLICY "Allow IT staff to create loans"

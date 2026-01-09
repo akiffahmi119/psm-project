@@ -1,8 +1,9 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
-import ProtectedRoute from "components/ProtectedRoute"; // Import the guard
+import ProtectedRoute from "components/ProtectedRoute";
+import MainLayout from "components/layout/MainLayout"; // Import MainLayout
 
 // Pages
 import NotFound from "pages/NotFound";
@@ -17,6 +18,7 @@ import CheckoutManagement from './pages/checkout-management';
 import SupplierManagement from './pages/supplier-management';
 import UserRegistration from 'pages/admin/UserRegistration';
 import EmployeeManagement from 'pages/admin/EmployeeManagement';
+import DepartmentManagement from 'pages/admin/DepartmentManagement';
 
 const Routes = () => {
   return (
@@ -28,8 +30,14 @@ const Routes = () => {
           <Route path="/login" element={<Login />} />
 
           {/* --- Protected Routes --- */}
-          {/* All routes inside this wrapper require login */}
-          <Route element={<ProtectedRoute allowedRoles={['system_admin']} />}>
+          {/* All routes inside this wrapper require login and get the MainLayout */}
+          <Route 
+            element={
+              <ProtectedRoute allowedRoles={['system_admin', 'manager', 'user']}>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             
@@ -38,12 +46,34 @@ const Routes = () => {
             <Route path="/search-results" element={<SearchResults />} />
             <Route path="/lifecycle-planning" element={<LifecyclePlanning />} />
             <Route path="/asset-list" element={<AssetListPage />} />
-            <Route path="/asset-details" element={<AssetDetails />} />
+            <Route path="/asset-details/:id" element={<AssetDetails />} />
             <Route path="/asset-registration" element={<AssetRegistration />} />
 
             {/* Admin Routes */}
-            <Route path="/admin/user-registration" element={<UserRegistration />} />
-            <Route path="/admin/employee-management" element={<EmployeeManagement />} />
+            <Route 
+              path="/admin/user-registration" 
+              element={
+                <ProtectedRoute allowedRoles={['system_admin']}>
+                  <UserRegistration />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/employee-management" 
+              element={
+                <ProtectedRoute allowedRoles={['system_admin', 'manager']}>
+                  <EmployeeManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/department-management" 
+              element={
+                <ProtectedRoute allowedRoles={['system_admin', 'manager']}>
+                  <DepartmentManagement />
+                </ProtectedRoute>
+              } 
+            />
           </Route>
 
           {/* Catch-all */}

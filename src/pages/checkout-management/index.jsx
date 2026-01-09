@@ -60,7 +60,7 @@ const CheckoutManagement = () => {
         employees (id, full_name, departments (name)),
         departments (id, name)
       `)
-      .in('status', ['checked_out', 'overdue']);
+      .in('status', ['active', 'overdue']);
 
     if (error) {
       console.error('Error fetching active loans:', error);
@@ -202,9 +202,10 @@ const CheckoutManagement = () => {
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
     if (loanError) {
-      console.error('Supabase Loan Error:', loanError);
-      setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset: ${loanError.message}`, type: "error" }]);
+      console.error('Supabase Loan INSERT Error:', loanError); // More specific log
+      setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset (INSERT failed): ${loanError.message}`, type: "error" }]);
     } else {
+      console.log('Loan INSERT successful. Now updating asset status and refetching data...'); // Success log
       const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
 
       if (assetError) {
@@ -212,9 +213,14 @@ const CheckoutManagement = () => {
       } else {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Asset ${selectedAsset.product_name} checked out to ${employee.name}`, type: "success" }]);
         // Refresh data
-        const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
-        setActiveLoans(loans);
-        setInStorageAssets(assets);
+        try {
+          const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
+          setActiveLoans(loans);
+          setInStorageAssets(assets);
+        } catch (fetchError) {
+          console.error('Error refetching data after loan insert:', fetchError);
+          setNotifications((prev) => [...prev, { id: Date.now(), message: `Error refetching data: ${fetchError.message}`, type: "error" }]);
+        }
       }
     }
 
@@ -242,9 +248,10 @@ const CheckoutManagement = () => {
     const { error: loanError } = await supabase.from('loans').insert([newLoan]);
 
     if (loanError) {
-      console.error('Supabase Loan Error:', loanError);
-      setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset to department: ${loanError.message}`, type: "error" }]);
+      console.error('Supabase Loan INSERT Error:', loanError); // More specific log
+      setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset to department (INSERT failed): ${loanError.message}`, type: "error" }]);
     } else {
+      console.log('Loan INSERT successful. Now updating asset status and refetching data...'); // Success log
       const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
 
       if (assetError) {
@@ -252,9 +259,14 @@ const CheckoutManagement = () => {
       } else {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Asset ${selectedAsset.product_name} checked out to ${department.name}`, type: "success" }]);
         // Refresh data
-        const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
-        setActiveLoans(loans);
-        setInStorageAssets(assets);
+        try {
+          const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
+          setActiveLoans(loans);
+          setInStorageAssets(assets);
+        } catch (fetchError) {
+          console.error('Error refetching data after loan insert:', fetchError);
+          setNotifications((prev) => [...prev, { id: Date.now(), message: `Error refetching data: ${fetchError.message}`, type: "error" }]);
+        }
       }
     }
 

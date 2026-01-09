@@ -8,16 +8,16 @@ const QuickViewPanel = ({ asset, isOpen, onClose, onEdit, onPrintQR }) => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'in_use':
+      case 'checked_out':
         return 'bg-success/10 text-success border-success/20';
       case 'in_storage':
         return 'bg-warning/10 text-warning border-warning/20';
-      case 'under_repair':
-        return 'bg-error/10 text-error border-error/20';
+      case 'in_repair':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'broken':
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'retired':
         return 'bg-muted text-muted-foreground border-border';
-      case 'lost':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -25,16 +25,16 @@ const QuickViewPanel = ({ asset, isOpen, onClose, onEdit, onPrintQR }) => {
 
   const getStatusLabel = (status) => {
     switch (status?.toLowerCase()) {
-      case 'in_use':
-        return 'In Use';
+      case 'checked_out':
+        return 'Checked Out';
       case 'in_storage':
         return 'In Storage';
-      case 'under_repair':
-        return 'Under Repair';
+      case 'in_repair':
+        return 'In Repair';
+      case 'broken':
+        return 'Broken';
       case 'retired':
         return 'Retired';
-      case 'lost':
-        return 'Lost/Stolen';
       default:
         return status;
     }
@@ -97,7 +97,7 @@ const QuickViewPanel = ({ asset, isOpen, onClose, onEdit, onPrintQR }) => {
           <div className="space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-foreground">{asset?.name}</h3>
+                <h3 className="font-semibold text-foreground">{asset?.product_name}</h3>
                 <p className="text-sm text-muted-foreground">{asset?.model}</p>
                 <p className="font-mono text-sm text-primary font-medium mt-1">
                   {asset?.assetId}
@@ -162,7 +162,7 @@ const QuickViewPanel = ({ asset, isOpen, onClose, onEdit, onPrintQR }) => {
                 Current Assignment
               </h4>
               <div className="space-y-1 text-sm">
-                <p className="font-medium text-foreground">{asset?.assignedTo?.name}</p>
+                <p className="font-medium text-foreground">{asset?.assignedTo?.full_name}</p>
                 <p className="text-muted-foreground">{asset?.assignedTo?.department}</p>
                 <p className="text-muted-foreground">{asset?.assignedTo?.email}</p>
                 <p className="text-xs text-muted-foreground">

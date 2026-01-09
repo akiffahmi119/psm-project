@@ -3,11 +3,12 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 
 const AssetStatusChart = ({ data }) => {
   const COLORS = {
-    'In Use': '#10B981',
-    'In Storage': '#F59E0B', 
-    'Under Repair': '#EF4444',
+    'Asset In Use': '#10B981', // For 'checked_out'
+    'In Storage': '#F59E0B',
+    'In Repair': '#EF4444',    // For 'in_repair'
     'Retired': '#6B7280',
-    'Lost/Stolen': '#DC2626'
+    'Broken': '#DC2626',     // For 'broken'
+    'Lost/Stolen': '#DC2626'  // For 'lost'
   };
 
   // --- NEW: Handle Empty State (Real Data Fix) ---

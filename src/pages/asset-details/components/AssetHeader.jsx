@@ -2,16 +2,19 @@ import React from 'react';
 
 import Button from '../../../components/ui/Button';
 import AppImage from '../../../components/AppImage'; // Assuming you have an AppImage component
+import { formatAssetStatus } from '../../../utils/formatters';
 
 const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'in use':
+      case 'checked_out':
         return 'bg-success/10 text-success border-success/20';
-      case 'in storage':
+      case 'in_storage':
         return 'bg-warning/10 text-warning border-warning/20';
-      case 'under repair':
-        return 'bg-error/10 text-error border-error/20';
+      case 'in_repair':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'broken':
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'retired':
         return 'bg-muted text-muted-foreground border-border';
       default:
@@ -27,7 +30,7 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
         <div className="w-full lg:w-1/4 xl:w-1/5">
           <AppImage 
             src={asset?.image_url} 
-            alt={asset?.name}
+            alt={asset?.product_name}
             className="rounded-lg object-cover w-full h-48 lg:h-full"
           />
         </div>
@@ -36,10 +39,10 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
             <h1 className="text-2xl font-semibold text-foreground">
-              {asset?.name}
+              {asset?.product_name}
             </h1>
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(asset?.status)}`}>
-              {asset?.status}
+              {formatAssetStatus(asset?.status)}
             </span>
           </div>
           
@@ -92,13 +95,13 @@ const AssetHeader = ({ asset, onEdit, onPrintQR, onCheckOut }) => {
             Print QR Code
           </Button>
           <Button
-            variant={asset?.status === 'In Use' ? 'secondary' : 'success'}
-            iconName={asset?.status === 'In Use' ? 'LogIn' : 'LogOut'}
+            variant={asset?.status === 'checked_out' ? 'secondary' : 'success'}
+            iconName={asset?.status === 'checked_out' ? 'LogIn' : 'LogOut'}
             iconPosition="left"
             onClick={onCheckOut}
             className="w-full sm:w-auto"
           >
-            {asset?.status === 'In Use' ? 'Check In' : 'Check Out'}
+            {asset?.status === 'checked_out' ? 'Check In' : 'Check Out'}
           </Button>
         </div>
       </div>

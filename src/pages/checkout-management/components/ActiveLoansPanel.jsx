@@ -15,7 +15,7 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
     // Apply filters
     if (filters?.employee) {
       filtered = filtered?.filter(loan =>
-        loan?.employee?.name?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
+        loan?.employee?.full_name?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
         loan?.employee?.email?.toLowerCase()?.includes(filters?.employee?.toLowerCase())
       );
     }
@@ -57,8 +57,8 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
       let bValue = b?.[sortBy];
 
       if (sortBy === 'employee') {
-        aValue = a?.employee?.name;
-        bValue = b?.employee?.name;
+        aValue = a?.employee?.full_name;
+        bValue = b?.employee?.full_name;
       } else if (sortBy === 'assetName') {
         aValue = a?.assetName;
         bValue = b?.assetName;
@@ -176,7 +176,7 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
         <AppIcon name="Package" size={48} className="mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-medium text-foreground mb-2">No Active Loans</h3>
         <p className="text-muted-foreground mb-6">
-          {loans?.length ? 'No loans match your current filters.' : 'All assets are currently available for checkout.'}
+          {loans?.length ? 'No loans match your current filters.' : 'All assets are currently in storage.'}
         </p>
         {loans?.length && (
           <Button variant="outline" onClick={() => onBulkOperation?.('clear-filters', [])}>
@@ -298,7 +298,7 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div>
-                      <p className="font-medium text-foreground text-sm">{loan?.employee?.name}</p>
+                      <p className="font-medium text-foreground text-sm">{loan?.employee?.full_name}</p>
                       <p className="text-xs text-muted-foreground">{loan?.employee?.department}</p>
                     </div>
                   </div>

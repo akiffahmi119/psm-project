@@ -4,6 +4,8 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
+import { formatAssetStatus } from '../../../utils/formatters';
+
 const FilterSidebar = ({ 
   isOpen, 
   onClose, 
@@ -28,10 +30,10 @@ const FilterSidebar = ({
   ];
 
   const statusOptions = [
-    { value: 'in_use', label: 'In Use' },
-    { value: 'in_storage', label: 'In Storage' },
-    { value: 'under_repair', label: 'Under Repair' },
-    { value: 'retired', label: 'Retired' }
+    { value: 'checked_out', label: formatAssetStatus('checked_out') },
+    { value: 'in_storage', label: formatAssetStatus('in_storage') },
+    { value: 'in_repair', label: formatAssetStatus('in_repair') },
+    { value: 'retired', label: formatAssetStatus('retired') }
   ];
 
   const locationOptions = [

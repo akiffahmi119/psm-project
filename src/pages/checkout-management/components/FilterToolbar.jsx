@@ -83,7 +83,7 @@ const FilterToolbar = ({ filters, onFilterChange, onBulkOperation }) => {
           {/* Department Filter */}
           <Select
             value={filters?.department || ''}
-            onValueChange={(value) => handleFilterChange('department', value)}
+            onChange={(value) => handleFilterChange('department', value)}
             options={departments}
             placeholder="Department"
           />
@@ -91,7 +91,7 @@ const FilterToolbar = ({ filters, onFilterChange, onBulkOperation }) => {
           {/* Category Filter */}
           <Select
             value={filters?.category || ''}
-            onValueChange={(value) => handleFilterChange('category', value)}
+            onChange={(value) => handleFilterChange('category', value)}
             options={categories}
             placeholder="Category"
           />
@@ -99,7 +99,7 @@ const FilterToolbar = ({ filters, onFilterChange, onBulkOperation }) => {
           {/* Status Filter */}
           <Select
             value={filters?.status || 'all'}
-            onValueChange={(value) => handleFilterChange('status', value)}
+            onChange={(value) => handleFilterChange('status', value)}
             options={statusOptions}
             placeholder="Status"
           />

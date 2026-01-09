@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../components/ui/Sidebar';
-import Header from '../../components/ui/Header';
 import { LoadingSpinner } from '../../components/ui/LoadingState';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 
@@ -14,24 +12,14 @@ import MaintenanceTab from './components/MaintenanceTab';
 import AttachmentsTab from './components/AttachmentsTab';
 import AuditTab from './components/AuditTab';
 import QRCodeModal from './components/QRCodeModal';
+import { supabase } from 'lib/supabaseClient';
 
 const AssetDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showQRModal, setShowQRModal] = useState(false);
-
-  // Mock user data
-  const user = {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@panasonic.com",
-    role: "it_staff",
-    avatar: "https://images.unsplash.com/photo-1734991032476-bceab8383a59",
-    avatarAlt: "Professional headshot of woman with shoulder-length brown hair in business attire"
-  };
 
   const [asset, setAsset] = useState(null);
   const [maintenanceHistory, setMaintenanceHistory] = useState([]);
@@ -60,7 +48,7 @@ const AssetDetails = () => {
           const formattedAsset = {
             ...data,
             location_name: data.department.name || 'N/A',
-            supplier_name: data.supplier.name || 'N/A',
+            supplier_name: data.supplier.company_name || 'N/A',
             assigned_to_name: data.assigned_to?.full_name || 'Unassigned',
           };
           setAsset(formattedAsset);
@@ -102,45 +90,11 @@ const AssetDetails = () => {
   };
 
   const handleCheckOut = () => {
-    const action = asset?.status === 'In Use' ? 'checked in' : 'checked out';
+    const action = asset?.status === 'checked_out' ? 'checked in' : 'checked out';
     addNotification({
       type: 'success',
       message: `Asset ${action} successfully!`
     });
-  };
-
-  const handleSearch = (query) => {
-    navigate(`/search-results?q=${encodeURIComponent(query)}`);
-  };
-
-  const handleNotificationClick = () => {
-    addNotification({
-      type: 'info',
-      message: 'You have 3 new notifications'
-    });
-  };
-
-  const handleProfileClick = (action) => {
-    switch (action) {
-      case 'profile':
-        addNotification({
-          type: 'info',
-          message: 'Profile settings would open here'
-        });
-        break;
-      case 'logout':
-        addNotification({
-          type: 'info',
-          message: 'Logging out...'
-        });
-        setTimeout(() => navigate('/'), 1000);
-        break;
-      default:
-        addNotification({
-          type: 'info',
-          message: `${action} feature coming soon`
-        });
-    }
   };
 
   if (isLoading) {
@@ -150,59 +104,40 @@ const AssetDetails = () => {
           <LoadingSpinner size="xl" className="mx-auto mb-4" />
           <p className="text-muted-foreground">Loading asset details...</p>
         </div>
-      </div>);
-
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        user={user} />
-
+    <div className="p-6">
+      <Breadcrumb asset={asset} />
       
-      <Header
-        user={user}
-        onSearch={handleSearch}
-        onNotificationClick={handleNotificationClick}
-        onProfileClick={handleProfileClick} />
+      <AssetHeader
+        asset={asset}
+        onEdit={handleEdit}
+        onPrintQR={handlePrintQR}
+        onCheckOut={handleCheckOut}
+      />
 
-
-      <main className={`transition-all duration-300 pt-16 ${
-      isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'}`
-      }>
-        <div className="p-6">
-          <Breadcrumb asset={asset} />
-          
-          <AssetHeader
-            asset={asset}
-            onEdit={handleEdit}
-            onPrintQR={handlePrintQR}
-            onCheckOut={handleCheckOut} />
-
-
-          <AssetTabs defaultTab="details">
-            <DetailsTab tabId="details" asset={asset} />
-            <MaintenanceTab tabId="maintenance" maintenanceHistory={maintenanceHistory} />
-            <AttachmentsTab tabId="attachments" attachments={attachments} />
-            <AuditTab tabId="audit" auditTrail={auditTrail} />
-          </AssetTabs>
-        </div>
-      </main>
+      <AssetTabs defaultTab="details">
+        <DetailsTab tabId="details" asset={asset} />
+        <MaintenanceTab tabId="maintenance" maintenanceHistory={maintenanceHistory} />
+        <AttachmentsTab tabId="attachments" attachments={attachments} />
+        <AuditTab tabId="audit" auditTrail={auditTrail} />
+      </AssetTabs>
 
       <QRCodeModal
         asset={asset}
         isOpen={showQRModal}
-        onClose={() => setShowQRModal(false)} />
-
+        onClose={() => setShowQRModal(false)}
+      />
 
       <NotificationContainer
         notifications={notifications}
-        onRemove={removeNotification} />
-
-    </div>);
-
+        onRemove={removeNotification}
+      />
+    </div>
+  );
 };
 
 export default AssetDetails;

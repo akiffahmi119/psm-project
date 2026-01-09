@@ -56,7 +56,7 @@ const DetailsTab = ({ asset }) => {
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Asset Name</span>
-                <span className="font-medium text-foreground">{asset?.name}</span>
+                <span className="font-medium text-foreground">{asset?.product_name}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Category</span>

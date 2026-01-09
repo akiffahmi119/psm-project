@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { supabase } from '../../lib/supabaseClient'; // 1. Import Supabase
-import Header from '../../components/ui/Header';
-import Sidebar from '../../components/ui/Sidebar';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { DashboardSkeleton } from '../../components/ui/LoadingState';
 import KPICard from './components/KPICard';
@@ -15,9 +13,10 @@ import QuickActions from './components/QuickActions';
 import GlobalSearchBar from './components/GlobalSearchBar';
 import Button from '../../components/ui/Button';
 
+import { formatAssetStatus } from '../../utils/formatters';
+
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   
   // 2. New State for Real Data
@@ -58,8 +57,8 @@ const Dashboard = () => {
 
             // --- CALCULATIONS ---
             const totalAssets = assets.length;
-            const inUseCount = assets.filter(a => a.status === 'In Use').length;
-            const inStorageCount = assets.filter(a => a.status === 'In Storage').length;
+            const inUseCount = assets.filter(a => a.status === 'checked_out').length;
+            const inStorageCount = assets.filter(a => a.status === 'in_storage').length;
             
             // Dummy logic for "Expiring Soon" (since we might not have warranty dates set perfectly yet)
             // In a real scenario, compare 'warranty_months' + 'purchase_date' vs Today
@@ -71,7 +70,7 @@ const Dashboard = () => {
                 return acc;
             }, {});
             const assetsByStatus = Object.keys(statusMap).map(key => ({ 
-                name: key, 
+                name: formatAssetStatus(key), 
                 value: statusMap[key],
                 total: totalAssets // Keep your component's expected format
             }));
@@ -163,7 +162,7 @@ const Dashboard = () => {
       color: "primary"
     },
     {
-      title: "Assets in Use",
+      title: "Asset In Use",
       value: realStats.inUseCount.toLocaleString(),
       subtitle: "Currently deployed",
       icon: "CheckCircle",
@@ -174,7 +173,7 @@ const Dashboard = () => {
     {
       title: "In Storage",
       value: realStats.inStorageCount.toLocaleString(),
-      subtitle: "Available for deployment",
+      subtitle: "In storage and ready for deployment",
       icon: "Archive",
       trend: "down",
       trendValue: "-0%",
@@ -195,25 +194,6 @@ const Dashboard = () => {
     navigate(`/search-results?q=${encodeURIComponent(query)}`);
   };
 
-  const handleNotificationClick = () => {
-    const newNotification = {
-      id: Date.now(),
-      message: "System notification test.",
-      type: "info",
-      duration: 3000
-    };
-    setNotifications((prev) => [...prev, newNotification]);
-  };
-
-  const handleProfileClick = (action) => {
-    const actions = {
-      profile: () => console.log('Navigate to profile'),
-      preferences: () => console.log('Navigate to preferences'),
-      help: () => console.log('Navigate to help'),
-    };
-    if (actions?.[action]) actions?.[action]();
-  };
-
   const removeNotification = (id) => {
     setNotifications((prev) => prev?.filter((notification) => notification?.id !== id));
   };
@@ -223,82 +203,56 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          user={user} 
-        />
-        <Header user={user} />
-        <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} pt-16`}>
-          <div className="p-6">
-            <DashboardSkeleton />
-          </div>
-        </main>
+      <div className="p-6">
+        <DashboardSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        user={user} 
-      />
-      <Header
-        user={user}
-        onSearch={handleSearch}
-        onNotificationClick={handleNotificationClick}
-        onProfileClick={handleProfileClick} 
-      />
-
-      <main className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} pt-16`}>
-        <div className="p-6 space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Asset Management Dashboard</h1>
-              <p className="text-muted-foreground">Monitor and manage your IT assets efficiently</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" iconName="Upload" onClick={handleBulkImport}>
-                Bulk Import
-              </Button>
-              <Button variant="default" iconName="Plus" onClick={handleAddAsset}>
-                Add Asset
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            <GlobalSearchBar />
-          </div>
-
-          {/* KPI Cards using Real Data */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {kpiData?.map((kpi, index) =>
-              <KPICard key={index} {...kpi} />
-            )}
-          </div>
-
-          {/* Charts using Real Data */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <AssetStatusChart data={realStats.assetsByStatus} />
-            <AssetCategoryChart data={realStats.assetsByCategory} />
-            <AssetTrendChart data={realStats.trendData} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              {/* Recent Activity using Real Data */}
-              <RecentActivityFeed activities={realStats.recentAssets} />
-            </div>
-            <div>
-              <QuickActions />
-            </div>
-          </div>
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Asset Management Dashboard</h1>
+          <p className="text-muted-foreground">Monitor and manage your IT assets efficiently</p>
         </div>
-      </main>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="outline" iconName="Upload" onClick={handleBulkImport}>
+            Bulk Import
+          </Button>
+          <Button variant="default" iconName="Plus" onClick={handleAddAsset}>
+            Add Asset
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <GlobalSearchBar onSearch={handleSearch} />
+      </div>
+
+      {/* KPI Cards using Real Data */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {kpiData?.map((kpi, index) =>
+          <KPICard key={index} {...kpi} />
+        )}
+      </div>
+
+      {/* Charts using Real Data */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <AssetStatusChart data={realStats.assetsByStatus} />
+        <AssetCategoryChart data={realStats.assetsByCategory} />
+        <AssetTrendChart data={realStats.trendData} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          {/* Recent Activity using Real Data */}
+          <RecentActivityFeed activities={realStats.recentAssets} />
+        </div>
+        <div>
+          <QuickActions />
+        </div>
+      </div>
       
       <NotificationContainer
         notifications={notifications}
