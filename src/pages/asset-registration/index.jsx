@@ -29,6 +29,11 @@ const assetRegistrationSchema = z.object({
   status: z.string().optional(),
 });
 
+// Draft schema
+const draftAssetSchema = assetRegistrationSchema.partial().extend({
+  product_name: z.string().min(1, "Asset Name is required for drafts"),
+});
+
 const AssetRegistration = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,7 +49,7 @@ const AssetRegistration = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [asset, setAsset] = useState(null);
 
-  const { register, handleSubmit, reset, setValue, control, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors, isSubmitting }, getValues } = useForm({
     resolver: zodResolver(assetRegistrationSchema),
     defaultValues: { 
       category: 'Laptop', 
@@ -123,6 +128,43 @@ const AssetRegistration = () => {
   const handleImageUpload = (url) => {
     setImageUrl(url);
     setValue('image_url', url);
+  };
+
+  const handleSaveAsDraft = async () => {
+    const formData = getValues();
+    const result = draftAssetSchema.safeParse(formData);
+
+    if (!result.success) {
+      // Show validation errors for draft
+      console.error("Draft validation errors:", result.error);
+      addNotification("Asset Name is required to save a draft.", "error");
+      return;
+    }
+    
+    setIsLoading(true);
+    const assetData = { ...formData, status: 'draft' };
+
+    try {
+      if (isEditMode) {
+        const { error } = await supabase.from('assets').update(assetData).eq('id', assetId);
+        if (error) throw error;
+        await logActivity('asset_draft_saved', `Updated draft for asset: ${assetData.product_name}`, assetId, userId, { changes: assetData });
+        navigate('/asset-list', { state: { message: 'Asset draft updated successfully!' } });
+      } else {
+        const asset_tag = `DRAFT-${Date.now()}`;
+        const { data, error } = await supabase.from('assets').insert({ ...assetData, asset_tag }).select().single();
+        if (error) throw error;
+        await logActivity('asset_draft_saved', `Saved new draft: ${assetData.product_name}`, data.id, userId, { new_asset_data: assetData });
+        addNotification(`Success! Asset draft saved.`, 'success');
+        reset();
+        setImageUrl(null);
+      }
+    } catch (error) {
+      console.error("Draft Submission Error:", error);
+      addNotification(error.message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // --- Handle Form Submit (Create or Update) ---
@@ -231,6 +273,7 @@ const AssetRegistration = () => {
 
         <div className="flex justify-end gap-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => navigate('/asset-list')}>Cancel</Button>
+            {!isEditMode && <Button type="button" variant="secondary" onClick={handleSaveAsDraft}>Save as Draft</Button>}
             <Button type="submit" loading={isSubmitting}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
         </div>
       </form>
