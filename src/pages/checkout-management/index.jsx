@@ -33,6 +33,7 @@ const CheckoutManagement = () => {
   const [checkInAsset, setCheckInAsset] = useState(null);
   const [activeLoans, setActiveLoans] = useState([]);
   const [inStorageAssets, setInStorageAssets] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [filters, setFilters] = useState({
     employee: '',
     department: '',
@@ -49,46 +50,18 @@ const CheckoutManagement = () => {
   };
 
   const fetchActiveLoans = async () => {
-    const { data, error } = await supabase
-      .from('loans')
-      .select(`
-        id,
-        checkout_date,
-        expected_return_date,
-        status,
-        notes,
-        assets (id, product_name, category),
-        employees (id, full_name, departments (name)),
-        departments (id, name)
-      `)
-      .in('status', ['active', 'overdue']);
+//...
+    }));
+  };
 
+  const fetchDepartments = async () => {
+    const { data, error } = await supabase.from('departments').select('*');
     if (error) {
-      console.error('Error fetching active loans:', error);
-      addNotification(`Error fetching loans: ${error.message}`, 'error');
+      console.error('Error fetching departments:', error);
+      addNotification(`Error fetching departments: ${error.message}`, 'error');
       return [];
     }
-
-    return data.map(loan => ({
-      id: loan.id,
-      assetId: loan.assets.id,
-      assetName: loan.assets.product_name,
-      assetCategory: loan.assets.category,
-      assignedTo: loan.employees ? {
-        type: 'employee',
-        id: loan.employees.id,
-        name: loan.employees.full_name,
-        department: loan.employees.departments?.name,
-      } : loan.departments ? {
-        type: 'department',
-        id: loan.departments.id,
-        name: loan.departments.name,
-      } : null,
-      checkoutDate: new Date(loan.checkout_date),
-      expectedReturnDate: new Date(loan.expected_return_date),
-      status: loan.status,
-      notes: loan.notes,
-    }));
+    return data;
   };
 
   const fetchInStorageAssets = async () => {
@@ -152,14 +125,16 @@ const CheckoutManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const [loans, assets] = await Promise.all([
+      const [loans, assets, departments] = await Promise.all([
         fetchActiveLoans(),
         fetchInStorageAssets(),
+        fetchDepartments(), // Fetch departments
       ]);
       console.log('Processed loans:', loans);
       console.log('Processed assets:', assets);
       setActiveLoans(loans);
       setInStorageAssets(assets);
+      setDepartments(departments); // Set departments state
       setIsLoading(false);
     };
 
@@ -207,8 +182,7 @@ const CheckoutManagement = () => {
       setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset (INSERT failed): ${loanError.message}`, type: "error" }]);
     } else {
       console.log('Loan INSERT successful. Now updating asset status and refetching data...'); // Success log
-      const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
-
+      const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out', current_department_id: employee.department_id }).eq('id', selectedAsset.id);
       if (assetError) {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Error updating asset status: ${assetError.message}`, type: "error" }]);
       } else {
@@ -261,7 +235,7 @@ const CheckoutManagement = () => {
       setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking out asset to department (INSERT failed): ${loanError.message}`, type: "error" }]);
     } else {
       console.log('Loan INSERT successful. Now updating asset status and refetching data...'); // Success log
-      const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out' }).eq('id', selectedAsset.id);
+      const { error: assetError } = await supabase.from('assets').update({ status: 'checked_out', current_department_id: department.id }).eq('id', selectedAsset.id);
 
       if (assetError) {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Error updating asset status: ${assetError.message}`, type: "error" }]);
@@ -311,7 +285,7 @@ const CheckoutManagement = () => {
       setNotifications((prev) => [...prev, { id: Date.now(), message: `Error checking in asset: ${loanError.message}`, type: "error" }]);
     } else {
       const loan = activeLoans.find((l) => l.id === loanId);
-      const { error: assetError } = await supabase.from('assets').update({ status: 'in_storage', condition: condition }).eq('id', loan.assetId);
+      const { error: assetError } = await supabase.from('assets').update({ status: 'in_storage', condition: condition, current_department_id: null }).eq('id', loan.assetId);
 
       if (assetError) {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Error updating asset status: ${assetError.message}`, type: "error" }]);
@@ -536,6 +510,7 @@ const CheckoutManagement = () => {
 
       {showDepartmentSearch &&
       <DepartmentSearchModal
+        departments={departments} // Pass departments to the modal
         onDepartmentSelect={handleDepartmentSelected}
         onClose={() => {
           setShowDepartmentSearch(false);

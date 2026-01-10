@@ -25,7 +25,6 @@ const assetRegistrationSchema = z.object({
   supplier_id: z.string().min(1, "Supplier is required"),
   image_url: z.string().url().optional().nullable(),
   lifespan_years: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0)),
-  current_department_id: z.string().min(1, "Department is required"),
   status: z.string().optional(),
 });
 
@@ -41,7 +40,6 @@ const draftAssetSchema = z.object({
   supplier_id: z.string().optional(),
   image_url: z.string().url().optional().nullable(),
   lifespan_years: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0).optional()),
-  current_department_id: z.string().optional(),
   status: z.string().optional(),
 });
 
@@ -56,7 +54,6 @@ const AssetRegistration = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [asset, setAsset] = useState(null);
   const [drafts, setDrafts] = useState([]);
@@ -68,8 +65,7 @@ const AssetRegistration = () => {
       category: 'Laptop', 
       warranty_months: 12, 
       lifespan_years: 3, 
-      purchase_price: 0,
-      current_department_id: ''
+      purchase_price: 0
     }
   });
 
@@ -89,13 +85,6 @@ const AssetRegistration = () => {
         setSuppliers(processedSupps);
         console.log("Processed suppliers for dropdown:", processedSupps);
       }
-
-      const { data: depts, error: deptsError } = await supabase.from('departments').select('id, name');
-      if (deptsError) console.error("Error fetching departments:", deptsError);
-      if (depts) {
-        const processedDepts = depts.map(d => ({ value: d.id.toString(), label: d.name }));
-        setDepartments(processedDepts);
-      }
     };
 
     const fetchAssetForEdit = async () => {
@@ -112,7 +101,6 @@ const AssetRegistration = () => {
             purchase_date: data.purchase_date ? new Date(data.purchase_date).toISOString().split('T')[0] : '',
             supplier_id: String(data.supplier_id),
             lifespan_years: data.lifespan_years || 3,
-            current_department_id: String(data.current_department_id),
           };
           reset(formattedData);
           if (data.image_url) {
@@ -195,7 +183,6 @@ const AssetRegistration = () => {
       supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
       image_url: formData.image_url,
       lifespan_years: formData.lifespan_years ? parseInt(formData.lifespan_years) : null,
-      current_department_id: formData.current_department_id ? parseInt(formData.current_department_id) : null,
       user_id: userId,
     };
 
@@ -238,7 +225,6 @@ const AssetRegistration = () => {
       supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
       image_url: formData.image_url,
       lifespan_years: formData.lifespan_years ? parseInt(formData.lifespan_years) : null,
-      current_department_id: formData.current_department_id ? parseInt(formData.current_department_id) : null,
       status: formData.status || 'in_storage',
     };
 
@@ -323,7 +309,7 @@ const AssetRegistration = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <AssetDetailsSection register={register} errors={errors} departments={departments} control={control} />
+        <AssetDetailsSection register={register} errors={errors} control={control} />
         
         <FinancialSection 
           register={register} errors={errors} 

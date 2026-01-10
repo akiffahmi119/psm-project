@@ -4,35 +4,10 @@ import Input from '../../../components/ui/Input';
 import AppIcon from '../../../components/AppIcon';
 import { supabase } from '../../../lib/supabaseClient';
 
-const DepartmentSearchModal = ({ onDepartmentSelect, onClose }) => {
+const DepartmentSearchModal = ({ departments, onDepartmentSelect, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [departments, setDepartments] = useState([]);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('departments')
-        .select(`
-          id,
-          name,
-          description,
-          created_at
-        `);
-
-      if (error) {
-        console.error('Error fetching departments:', error);
-        // Optionally add a notification for the error
-      } else {
-        setDepartments(data);
-      }
-      setIsLoading(false);
-    };
-
-    fetchDepartments();
-  }, []);
-
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Filter departments based on search query
   const filteredDepartments = useMemo(() => {
     let filtered = departments || [];
