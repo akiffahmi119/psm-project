@@ -116,13 +116,13 @@ const Dashboard = () => {
             })(assets);
 
             // Map Recent Activity (using newly added assets)
-            const recentAssets = assets.slice(0, 5).map(asset => ({
-                id: asset.id,
-                type: 'asset_added', // For now, we only track additions
-                description: `New ${asset.product_name} (${asset.category})`,
-                user: 'System Admin', // Placeholder until we track creator_id
-                timestamp: new Date(asset.created_at),
-                assetId: asset.asset_tag
+            const recentActivities = activitiesData.map(activity => ({
+              id: activity.id,
+              type: activity.type,
+              description: activity.description,
+              user: activity.users ? (activity.users.full_name || activity.users.email) : 'Unknown User',
+              timestamp: new Date(activity.created_at),
+              assetId: activity.assets?.asset_tag || activity.asset_id, // Use asset_tag if available, otherwise asset_id
             }));
 
             setRealStats({
@@ -132,7 +132,7 @@ const Dashboard = () => {
                 expiringCount,
                 assetsByStatus,
                 assetsByCategory,
-                recentAssets,
+                recentAssets: recentActivities,
                 trendData,
             });
 

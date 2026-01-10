@@ -1,7 +1,9 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const RecentActivityFeed = ({ activities }) => {
+  const navigate = useNavigate(); // Initialize useNavigate
   const getActivityIcon = (type) => {
     switch (type) {
       case 'asset_added':
@@ -82,7 +84,10 @@ const RecentActivityFeed = ({ activities }) => {
         ))}
       </div>
       <div className="mt-4 pt-4 border-t border-border">
-        <button className="text-sm text-accent hover:text-accent/80 font-medium transition-colors">
+        <button 
+          onClick={() => navigate('/all-activities')} // Add onClick handler
+          className="text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+        >
           View all activity →
         </button>
       </div>

@@ -15,6 +15,7 @@ import DepartmentSearchModal from './components/DepartmentSearchModal';
 import EmployeeSearchModal from './components/EmployeeSearchModal';
 import FilterToolbar from './components/FilterToolbar';
 import StatsCards from './components/StatsCards';
+import { logActivity } from '../../utils/activityLogger'; // Import logActivity
 
 const CheckoutManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +43,7 @@ const CheckoutManagement = () => {
 
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-
+  const userId = user?.id; // Get userId from the user object
   const addNotification = (message, type) => {
     setNotifications((prev) => [...prev, { id: Date.now(), message, type }]);
   };
@@ -212,6 +213,14 @@ const CheckoutManagement = () => {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Error updating asset status: ${assetError.message}`, type: "error" }]);
       } else {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Asset ${selectedAsset.product_name} checked out to ${employee.name}`, type: "success" }]);
+        // Log activity for asset assigned to employee
+        await logActivity(
+          'asset_assigned',
+          `Asset ${selectedAsset.product_name} (${selectedAsset.asset_tag}) assigned to employee ${employee.full_name}`,
+          selectedAsset.id,
+          userId,
+          { assigned_to_type: 'employee', employee_id: employee.id, employee_name: employee.full_name }
+        );
         // Refresh data
         try {
           const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
@@ -258,6 +267,14 @@ const CheckoutManagement = () => {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Error updating asset status: ${assetError.message}`, type: "error" }]);
       } else {
         setNotifications((prev) => [...prev, { id: Date.now(), message: `Asset ${selectedAsset.product_name} checked out to ${department.name}`, type: "success" }]);
+        // Log activity for asset assigned to department
+        await logActivity(
+          'asset_assigned',
+          `Asset ${selectedAsset.product_name} (${selectedAsset.asset_tag}) assigned to department ${department.name}`,
+          selectedAsset.id,
+          userId,
+          { assigned_to_type: 'department', department_id: department.id, department_name: department.name }
+        );
         // Refresh data
         try {
           const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);

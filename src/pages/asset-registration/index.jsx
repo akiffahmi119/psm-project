@@ -9,6 +9,8 @@ import AssetDetailsSection from './components/AssetDetailsSection';
 import FinancialSection from './components/FinancialSection';
 import ImageUpload from './components/ImageUpload';
 import Button from '../../components/ui/Button';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { logActivity } from '../../utils/activityLogger'; // Import logActivity
 
 // --- 1. Zod Validation Schema ---
 const assetRegistrationSchema = z.object({
@@ -51,6 +53,8 @@ const AssetRegistration = () => {
   });
 
   console.log('Form Errors:', errors);
+  const { user: authUser } = useSelector((state) => state.auth); // Get user from Redux store
+  const userId = authUser?.id;
 
   // --- Fetch Reference Data & Asset Data for Editing ---
   useEffect(() => {
@@ -139,12 +143,28 @@ const AssetRegistration = () => {
         // --- UPDATE ---
         const { error } = await supabase.from('assets').update(assetData).eq('id', assetId);
         if (error) throw error;
+        // Log activity for asset update
+        await logActivity(
+          'asset_updated',
+          `Updated asset: ${assetData.product_name} (${assetData.serial_number})`,
+          assetId, // Use assetId here
+          userId,
+          { changes: assetData } // Log the changes made
+        );
         navigate('/asset-list', { state: { message: 'Asset details updated successfully!' } });
       } else {
         // --- INSERT ---
-        const asset_tag = `ISD-${formData.category.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const { error } = await supabase.from('assets').insert({ ...assetData, asset_tag, status: 'in_storage' });
+        const asset_tag = `ISD-${assetData.category.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const { data, error } = await supabase.from('assets').insert({ ...assetData, asset_tag, status: 'in_storage' }).select().single();
         if (error) throw error;
+        // Log activity for asset added
+        await logActivity(
+          'asset_added',
+          `Added new asset: ${assetData.product_name} (${asset_tag})`,
+          data.id, // Use the newly created asset's ID
+          userId,
+          { new_asset_data: assetData }
+        );
         addNotification(`Success! Asset ${asset_tag} registered.`, 'success');
         reset();
         setImageUrl(null);

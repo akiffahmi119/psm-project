@@ -8,6 +8,8 @@ import { DashboardSkeleton } from '../../components/ui/LoadingState';
 import AssetDetailPanel from './components/AssetDetailPanel';
 import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { formatAssetStatus } from '../../utils/formatters';
+import { useSelector } from 'react-redux'; // Import useSelector
+import { logActivity } from '../../utils/activityLogger'; // Import logActivity
 
 // --- QR Code Modal Component ---
 const QRCodeModal = ({ asset, onClose }) => {
@@ -55,6 +57,9 @@ const AssetList = () => {
     const [qrAsset, setQrAsset] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [notifications, setNotifications] = useState([]);
+
+    const { user: authUser } = useSelector((state) => state.auth); // Get user from Redux store
+    const userId = authUser?.id;
 
     const addNotification = (message, type) => {
         setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
@@ -108,6 +113,14 @@ const AssetList = () => {
                 if (error) throw error;
                 setAssets(currentAssets => currentAssets.filter(a => a.id !== asset.id));
                 addNotification('Asset deleted successfully.', 'success');
+                // Log activity for asset deletion
+                await logActivity(
+                  'asset_deleted',
+                  `Deleted asset: ${asset.product_name} (${asset.asset_tag})`,
+                  asset.id,
+                  userId,
+                  { deleted_asset_name: asset.product_name, deleted_asset_tag: asset.asset_tag }
+                );
                 if (selectedAsset && selectedAsset.id === asset.id) {
                     setSelectedAsset(null);
                 }
