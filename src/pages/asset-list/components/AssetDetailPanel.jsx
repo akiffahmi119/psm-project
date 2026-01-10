@@ -147,7 +147,9 @@ const AssetDetailPanel = ({ asset, onClose, onEdit, onAssetUpdate }) => {
             <DetailItem label="Category" value={asset.category} />
             <DetailItem label="Serial Number" value={asset.serial_number} />
             <DetailItem label="Department" value={asset.departments?.name} />
-            <DetailItem label="Supplier" value={asset.suppliers?.name} />
+            <DetailItem label="Supplier" value={asset.suppliers?.company_name} />
+            <DetailItem label="Contact person" value={asset.suppliers?.contact_person} />
+            <DetailItem label="Contact number" value={asset.suppliers?.phone} />
             <DetailItem 
               label="Purchase Date" 
               value={asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString() : '-'}
