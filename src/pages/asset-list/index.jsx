@@ -57,7 +57,6 @@ const AssetList = () => {
     const [qrAsset, setQrAsset] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
     const [notifications, setNotifications] = useState([]);
-    const [activeTab, setActiveTab] = useState('all'); // Add activeTab state
 
     const { user: authUser } = useSelector((state) => state.auth); // Get user from Redux store
     const userId = authUser?.id;
@@ -141,12 +140,6 @@ const AssetList = () => {
     const sortedAndFilteredAssets = useMemo(() => {
         return assets
           .filter(asset => {
-              if (activeTab === 'drafts') {
-                  return asset.status === 'draft';
-              }
-              return asset.status !== 'draft';
-          })
-          .filter(asset => {
             const matchesCategory = filterCategory === 'All' || asset.category === filterCategory;
             const searchLower = searchQuery.toLowerCase();
             const matchesSearch = (asset.product_name || '').toLowerCase().includes(searchLower) ||
@@ -154,7 +147,7 @@ const AssetList = () => {
                                 (asset.serial_number || '').toLowerCase().includes(searchLower);
             return matchesCategory && matchesSearch;
         });
-    }, [assets, filterCategory, searchQuery, activeTab]); // Add activeTab to dependency array
+    }, [assets, filterCategory, searchQuery]);
 
     const handleSort = (key) => {
         let direction = 'asc';
@@ -220,24 +213,6 @@ const AssetList = () => {
                 </div>
 
                 <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-                <div className="border-b border-border">
-                  <nav className="flex space-x-8 px-6">
-                    <button
-                      onClick={() => setActiveTab('all')}
-                      className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`
-                      }>
-                      All Assets
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('drafts')}
-                      className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'drafts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}`
-                      }>
-                      Drafts
-                    </button>
-                  </nav>
-                </div>
                     {isLoading ? (
                         <div className="p-6"><DashboardSkeleton /></div>
                     ) : sortedAndFilteredAssets.length === 0 ? (

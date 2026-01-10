@@ -30,8 +30,19 @@ const assetRegistrationSchema = z.object({
 });
 
 // Draft schema
-const draftAssetSchema = assetRegistrationSchema.partial().extend({
+const draftAssetSchema = z.object({
   product_name: z.string().min(1, "Asset Name is required for drafts"),
+  category: z.string().optional(),
+  serial_number: z.string().optional(),
+  model: z.string().optional(),
+  purchase_date: z.string().optional(),
+  purchase_price: z.preprocess((a) => parseFloat(String(a)) || 0, z.number().min(0).optional()),
+  warranty_months: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0).optional()),
+  supplier_id: z.string().optional(),
+  image_url: z.string().url().optional().nullable(),
+  lifespan_years: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0).optional()),
+  current_department_id: z.string().optional(),
+  status: z.string().optional(),
 });
 
 const AssetRegistration = () => {
@@ -48,6 +59,8 @@ const AssetRegistration = () => {
   const [departments, setDepartments] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [asset, setAsset] = useState(null);
+  const [drafts, setDrafts] = useState([]);
+  const [selectedDraftId, setSelectedDraftId] = useState(null);
 
   const { register, handleSubmit, reset, setValue, control, formState: { errors, isSubmitting }, getValues } = useForm({
     resolver: zodResolver(assetRegistrationSchema),
@@ -118,8 +131,21 @@ const AssetRegistration = () => {
     if (!isBulkMode) {
       fetchReferenceData();
       fetchAssetForEdit();
+      fetchDrafts();
     }
   }, [assetId, isEditMode, isBulkMode, reset, setValue]);
+
+  const fetchDrafts = async () => {
+    const { data, error } = await supabase
+      .from('draft_assets')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) {
+      console.error('Error fetching drafts:', error);
+    } else {
+      setDrafts(data);
+    }
+  };
 
   const addNotification = (message, type) => {
     setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
@@ -128,6 +154,22 @@ const AssetRegistration = () => {
   const handleImageUpload = (url) => {
     setImageUrl(url);
     setValue('image_url', url);
+  };
+
+  const handleSelectDraft = (draft) => {
+    setSelectedDraftId(draft.id);
+    reset(draft);
+    setImageUrl(draft.image_url);
+  };
+
+  const handleDeleteDraft = async (draftId) => {
+    const { error } = await supabase.from('draft_assets').delete().eq('id', draftId);
+    if (error) {
+      addNotification('Error deleting draft.', 'error');
+    } else {
+      addNotification('Draft deleted successfully.', 'success');
+      setDrafts(drafts.filter(d => d.id !== draftId));
+    }
   };
 
   const handleSaveAsDraft = async () => {
@@ -142,22 +184,36 @@ const AssetRegistration = () => {
     }
     
     setIsLoading(true);
-    const assetData = { ...formData, status: 'draft' };
+    const assetData = {
+      product_name: formData.product_name,
+      category: formData.category,
+      serial_number: formData.serial_number,
+      model: formData.model,
+      purchase_date: formData.purchase_date || null,
+      purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : null,
+      warranty_months: formData.warranty_months ? parseInt(formData.warranty_months) : null,
+      supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
+      image_url: formData.image_url,
+      lifespan_years: formData.lifespan_years ? parseInt(formData.lifespan_years) : null,
+      current_department_id: formData.current_department_id ? parseInt(formData.current_department_id) : null,
+      user_id: userId,
+    };
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from('assets').update(assetData).eq('id', assetId);
+      if (selectedDraftId) {
+        // --- UPDATE DRAFT ---
+        const { error } = await supabase.from('draft_assets').update(assetData).eq('id', selectedDraftId);
         if (error) throw error;
-        await logActivity('asset_draft_saved', `Updated draft for asset: ${assetData.product_name}`, assetId, userId, { changes: assetData });
-        navigate('/asset-list', { state: { message: 'Asset draft updated successfully!' } });
+        addNotification('Draft updated successfully!', 'success');
+        fetchDrafts(); // Refresh drafts list
       } else {
-        const asset_tag = `DRAFT-${Date.now()}`;
-        const { data, error } = await supabase.from('assets').insert({ ...assetData, asset_tag }).select().single();
+        // --- INSERT DRAFT ---
+        const { data, error } = await supabase.from('draft_assets').insert(assetData).select().single();
         if (error) throw error;
-        await logActivity('asset_draft_saved', `Saved new draft: ${assetData.product_name}`, data.id, userId, { new_asset_data: assetData });
         addNotification(`Success! Asset draft saved.`, 'success');
         reset();
         setImageUrl(null);
+        fetchDrafts(); // Refresh drafts list
       }
     } catch (error) {
       console.error("Draft Submission Error:", error);
@@ -176,14 +232,14 @@ const AssetRegistration = () => {
       category: formData.category,
       serial_number: formData.serial_number,
       model: formData.model,
-      purchase_date: formData.purchase_date,
-      purchase_price: formData.purchase_price,
-      warranty_months: formData.warranty_months,
-      supplier_id: parseInt(formData.supplier_id),
+      purchase_date: formData.purchase_date || null,
+      purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : null,
+      warranty_months: formData.warranty_months ? parseInt(formData.warranty_months) : null,
+      supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
       image_url: formData.image_url,
-      lifespan_years: formData.lifespan_years,
-      current_department_id: parseInt(formData.current_department_id),
-      status: formData.status,
+      lifespan_years: formData.lifespan_years ? parseInt(formData.lifespan_years) : null,
+      current_department_id: formData.current_department_id ? parseInt(formData.current_department_id) : null,
+      status: formData.status || 'in_storage',
     };
 
     try {
@@ -205,6 +261,12 @@ const AssetRegistration = () => {
         const asset_tag = `ISD-${assetData.category.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
         const { data, error } = await supabase.from('assets').insert({ ...assetData, asset_tag, status: 'in_storage' }).select().single();
         if (error) throw error;
+
+        // If this was a draft, delete it
+        if (selectedDraftId) {
+          await supabase.from('draft_assets').delete().eq('id', selectedDraftId);
+        }
+
         // Log activity for asset added
         await logActivity(
           'asset_added',
@@ -216,6 +278,8 @@ const AssetRegistration = () => {
         addNotification(`Success! Asset ${asset_tag} registered.`, 'success');
         reset();
         setImageUrl(null);
+        setSelectedDraftId(null);
+        fetchDrafts();
       }
     } catch (error) {
       console.error("Submission Error:", error);
@@ -273,10 +337,37 @@ const AssetRegistration = () => {
 
         <div className="flex justify-end gap-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => navigate('/asset-list')}>Cancel</Button>
-            {!isEditMode && <Button type="button" variant="secondary" onClick={handleSaveAsDraft}>Save as Draft</Button>}
+            {!isEditMode && <Button type="button" variant="secondary" onClick={handleSaveAsDraft}>{selectedDraftId ? 'Update Draft' : 'Save as Draft'}</Button>}
             <Button type="submit" loading={isSubmitting}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
         </div>
       </form>
+
+      {!isEditMode && !isBulkMode && drafts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-foreground mb-4">Your Drafts</h2>
+          <div className="space-y-2">
+            {drafts.map(draft => (
+              <div key={draft.id} className="p-4 bg-muted/50 rounded-lg flex justify-between items-center">
+                <div>
+                  <p className="font-medium">{draft.product_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Saved on {new Date(draft.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <Button variant="outline" size="sm" onClick={() => handleSelectDraft(draft)}>
+                    Load Draft
+                  </Button>
+                  <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleDeleteDraft(draft.id)}>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <NotificationContainer notifications={notifications} onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
     </div>
   );
