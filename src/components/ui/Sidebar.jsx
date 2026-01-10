@@ -166,8 +166,11 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
 
           {/* Navigation */}
           <nav className="flex-1 py-4">
-            {Object.entries(groupedNavItems).map(([category, items]) => (
-              <div key={category} className={`space-y-1 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+            {Object.entries(groupedNavItems).map(([category, items], index) => (
+              <div 
+                key={category} 
+                className={`space-y-1 ${isCollapsed ? 'px-2' : 'px-4'} ${index > 0 ? 'mt-4' : ''}`} // Add mt-4 for spacing
+              >
                 {!isCollapsed && (
                   <h3 className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {category}
