@@ -115,14 +115,42 @@ const Dashboard = () => {
                 return Array.from(monthlyCounts, ([month, count]) => ({ month, count }));
             })(assets);
 
-            // Map Recent Activity (using newly added assets)
+            // Fetch recent activities
+            const { data: activitiesData, error: activitiesError } = await supabase
+              .from('activities')
+              .select(`
+                *,
+                assets ( product_name, asset_tag )
+              `)
+              .order('created_at', { ascending: false })
+              .limit(5);
+
+            if (activitiesError) throw activitiesError;
+
+            // Get user IDs from activities
+            const userIds = [...new Set(activitiesData.map(a => a.user_id).filter(Boolean))];
+
+            // Fetch profiles for the user IDs
+            const { data: profilesData, error: profilesError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email')
+              .in('id', userIds);
+            
+            if (profilesError) throw profilesError;
+
+            const profilesMap = profilesData.reduce((acc, profile) => {
+              acc[profile.id] = profile;
+              return acc;
+            }, {});
+
+            // Map Recent Activity
             const recentActivities = activitiesData.map(activity => ({
               id: activity.id,
               type: activity.type,
               description: activity.description,
-              user: activity.users ? (activity.users.full_name || activity.users.email) : 'Unknown User',
+              user: profilesMap[activity.user_id] ? (profilesMap[activity.user_id].full_name || profilesMap[activity.user_id].email) : 'Unknown User',
               timestamp: new Date(activity.created_at),
-              assetId: activity.assets?.asset_tag || activity.asset_id, // Use asset_tag if available, otherwise asset_id
+              assetId: activity.assets?.asset_tag || activity.asset_id,
             }));
 
             setRealStats({

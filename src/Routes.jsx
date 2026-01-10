@@ -19,7 +19,7 @@ import SupplierManagement from './pages/supplier-management';
 import UserRegistration from 'pages/admin/UserRegistration';
 import EmployeeManagement from 'pages/admin/EmployeeManagement';
 import DepartmentManagement from 'pages/admin/DepartmentManagement';
-import AllActivities from './pages/AllActivities'; // Import AllActivities
+import AllActivities from 'pages/AllActivities'; // Import AllActivities
 
 const Routes = () => {
   return (

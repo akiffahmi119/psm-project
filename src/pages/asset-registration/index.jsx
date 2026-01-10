@@ -11,6 +11,7 @@ import ImageUpload from './components/ImageUpload';
 import Button from '../../components/ui/Button';
 import { useSelector } from 'react-redux'; // Import useSelector
 import { logActivity } from '../../utils/activityLogger'; // Import logActivity
+import BulkImport from './components/BulkImport'; // Import BulkImport
 
 // --- 1. Zod Validation Schema ---
 const assetRegistrationSchema = z.object({
@@ -22,7 +23,7 @@ const assetRegistrationSchema = z.object({
   purchase_price: z.preprocess((a) => parseFloat(String(a)) || 0, z.number().min(0)),
   warranty_months: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0)),
   supplier_id: z.string().min(1, "Supplier is required"),
-  image_url: z.string().optional(),
+  image_url: z.string().url().optional().nullable(),
   lifespan_years: z.preprocess((a) => parseInt(String(a)) || 0, z.number().int().min(0)),
   current_department_id: z.string().min(1, "Department is required"),
   status: z.string().optional(),
@@ -32,7 +33,9 @@ const AssetRegistration = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const assetId = searchParams.get('id');
+  const mode = searchParams.get('mode'); // Get mode from URL
   const isEditMode = assetId !== null;
+  const isBulkMode = mode === 'bulk';
 
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,9 +110,11 @@ const AssetRegistration = () => {
       }
     };
 
-    fetchReferenceData();
-    fetchAssetForEdit();
-  }, [assetId, isEditMode, reset, setValue]);
+    if (!isBulkMode) {
+      fetchReferenceData();
+      fetchAssetForEdit();
+    }
+  }, [assetId, isEditMode, isBulkMode, reset, setValue]);
 
   const addNotification = (message, type) => {
     setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
@@ -128,6 +133,7 @@ const AssetRegistration = () => {
       product_name: formData.product_name,
       category: formData.category,
       serial_number: formData.serial_number,
+      model: formData.model,
       purchase_date: formData.purchase_date,
       purchase_price: formData.purchase_price,
       warranty_months: formData.warranty_months,
@@ -177,6 +183,21 @@ const AssetRegistration = () => {
     }
   };
 
+  if (isBulkMode) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Bulk Import Assets</h1>
+            <p className="text-muted-foreground">Upload a CSV file to add multiple assets at once.</p>
+          </div>
+        </div>
+        <BulkImport />
+        <NotificationContainer notifications={notifications} onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -184,6 +205,15 @@ const AssetRegistration = () => {
           <h1 className="text-2xl font-bold text-foreground">{isEditMode ? 'Edit Asset' : 'Register New Asset'}</h1>
           <p className="text-muted-foreground">{isEditMode ? 'Update the details of the existing asset.' : 'Add new equipment to the live database.'}</p>
         </div>
+        {!isEditMode && ( // Only show button when not in edit mode
+          <Button
+            variant="outline"
+            iconName="Upload"
+            onClick={() => navigate('/asset-registration?mode=bulk')} // Navigate to bulk import mode
+          >
+            Bulk Import
+          </Button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -201,12 +231,13 @@ const AssetRegistration = () => {
 
         <div className="flex justify-end gap-3 pt-6 border-t">
             <Button type="button" variant="outline" onClick={() => navigate('/asset-list')}>Cancel</Button>
-            <Button type="submit" isLoading={isSubmitting}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
+            <Button type="submit" loading={isSubmitting}>{isEditMode ? 'Save Changes' : 'Register Asset'}</Button>
         </div>
       </form>
       <NotificationContainer notifications={notifications} onRemove={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
     </div>
   );
 };
+
 
 export default AssetRegistration;

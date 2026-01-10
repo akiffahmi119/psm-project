@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import { DashboardSkeleton } from '../../components/ui/LoadingState';
-import Icon from '../../components/AppIcon';
-import { NotificationContainer } from '../../components/ui/NotificationToast';
+import { supabase } from '../lib/supabaseClient';
+import { DashboardSkeleton } from '../components/ui/LoadingState';
+import Icon from '../components/AppIcon';
+import { NotificationContainer } from '../components/ui/NotificationToast';
 import { format } from 'date-fns';
 
 const AllActivities = () => {
@@ -22,13 +22,7 @@ const AllActivities = () => {
         let query = supabase
           .from('activities')
           .select(`
-            id,
-            created_at,
-            type,
-            description,
-            user_id,
-            asset_id,
-            users ( full_name, email ),
+            *,
             assets ( product_name, asset_tag )
           `)
           .order('created_at', { ascending: false });
@@ -41,11 +35,27 @@ const AllActivities = () => {
 
         if (error) throw error;
 
+        // Get user IDs from activities
+        const userIds = [...new Set(data.map(a => a.user_id).filter(Boolean))];
+
+        // Fetch profiles for the user IDs
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        
+        if (profilesError) throw profilesError;
+
+        const profilesMap = profilesData.reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+
         const formattedActivities = data.map(activity => ({
           id: activity.id,
           type: activity.type,
           description: activity.description,
-          user: activity.users ? (activity.users.full_name || activity.users.email) : 'Unknown User',
+          user: profilesMap[activity.user_id] ? (profilesMap[activity.user_id].full_name || profilesMap[activity.user_id].email) : 'Unknown User',
           timestamp: new Date(activity.created_at),
           assetId: activity.assets?.asset_tag || activity.asset_id,
         }));
