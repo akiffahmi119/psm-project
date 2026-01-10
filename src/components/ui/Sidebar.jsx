@@ -14,57 +14,66 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       label: 'Dashboard',
       path: '/dashboard',
       icon: 'LayoutDashboard',
-      roles: ['system_admin', 'it_staff', 'department_pic'] // Changed 'admin' to 'system_admin'
+      roles: ['system_admin', 'it_staff', 'department_pic'],
+      category: 'General'
     },
 
     {
       label: 'Asset List',
       path: '/asset-list',
       icon: 'Package',
-      roles: ['system_admin', 'it_staff', 'department_pic']
+      roles: ['system_admin', 'it_staff', 'department_pic'],
+      category: 'General'
     },
     {
       label: 'Add Asset',
       path: '/asset-registration',
       icon: 'Plus',
-      roles: ['system_admin', 'it_staff'] // Changed 'admin' to 'system_admin'
+      roles: ['system_admin', 'it_staff'], // Changed 'admin' to 'system_admin'
+      category: 'General'
     },
     {
     
       label: 'Checkout Management',
       path: '/checkout-management',
       icon: 'UserCheck',
-      roles: ['system_admin', 'it_staff']
+      roles: ['system_admin', 'it_staff'],
+      category: 'Management'
     },
     {
       label: 'Supplier Management',
       path: '/supplier-management',
       icon: 'Truck',
-      roles: ['system_admin', 'it_staff']
+      roles: ['system_admin', 'it_staff'],
+      category: 'Management'
     },
     {
       label: 'Lifecycle Planning',
       path: '/lifecycle-planning',
       icon: 'TrendingUp',
-      roles: ['system_admin', 'it_staff']
+      roles: ['system_admin', 'it_staff'],
+      category: 'Management'
     },
     {
       label: 'User Registration',
       path: '/admin/user-registration',
       icon: 'UserCog', // Assuming 'UserCog' is a valid icon
-      roles: ['system_admin']
+      roles: ['system_admin'],
+      category: 'Admin'
     },
     {
       label: 'Employee Management',
       path: '/admin/employee-management',
       icon: 'Users', // Assuming 'Users' is a valid icon
-      roles: ['system_admin', 'manager']
+      roles: ['system_admin', 'manager'],
+      category: 'Admin'
     },
     {
       label: 'Department Management',
       path: '/admin/department-management',
       icon: 'Building2',
-      roles: ['system_admin', 'manager']
+      roles: ['system_admin', 'manager'],
+      category: 'Admin'
     }
   ];
 
@@ -101,6 +110,15 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
     
     return pathname.startsWith(path);
   };
+
+  const groupedNavItems = filteredNavItems.reduce((acc, item) => {
+    const category = item.category || 'General';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {});
 
   return (
     <>
@@ -148,35 +166,42 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
 
           {/* Navigation */}
           <nav className="flex-1 py-4">
-            <div className={`space-y-1 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-              {filteredNavItems?.map((item) => (
-                <button
-                  key={item?.path}
-                  onClick={() => handleNavigation(item?.path)}
-                  className={`
-                    w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                    transition-colors duration-150 group
-                    ${isActive(item?.path)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }
-                    ${isCollapsed ? 'justify-center' : ''}
-                  `}
-                  title={isCollapsed ? item?.label : undefined}
-                >
-                  <Icon 
-                    name={item?.icon} 
-                    size={20} 
-                    className={`flex-shrink-0 ${
-                      isActive(item?.path) ? 'text-primary-foreground' : ''
-                    }`}
-                  />
-                  {!isCollapsed && (
-                    <span className="truncate">{item?.label}</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            {Object.entries(groupedNavItems).map(([category, items]) => (
+              <div key={category} className={`space-y-1 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+                {!isCollapsed && (
+                  <h3 className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {category}
+                  </h3>
+                )}
+                {items.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`
+                      w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                      transition-colors duration-150 group
+                      ${isActive(item.path)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }
+                      ${isCollapsed ? 'justify-center' : ''}
+                    `}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <Icon 
+                      name={item.icon} 
+                      size={20} 
+                      className={`flex-shrink-0 ${
+                        isActive(item.path) ? 'text-primary-foreground' : ''
+                      }`}
+                    />
+                    {!isCollapsed && (
+                      <span className="truncate">{item.label}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ))}
           </nav>
 
           {/* User Section */}
