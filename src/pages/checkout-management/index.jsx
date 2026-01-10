@@ -50,7 +50,45 @@ const CheckoutManagement = () => {
   };
 
   const fetchActiveLoans = async () => {
-//...
+    const { data, error } = await supabase
+      .from('loans')
+      .select(`
+        id,
+        checkout_date,
+        expected_return_date,
+        status,
+        notes,
+        assets (id, product_name, category),
+        employees (id, full_name, departments (name)),
+        departments (id, name)
+      `)
+      .in('status', ['active', 'overdue']);
+
+    if (error) {
+      console.error('Error fetching active loans:', error);
+      addNotification(`Error fetching loans: ${error.message}`, 'error');
+      return [];
+    }
+
+    return data.map(loan => ({
+      id: loan.id,
+      assetId: loan.assets.id,
+      assetName: loan.assets.product_name,
+      assetCategory: loan.assets.category,
+      assignedTo: loan.employees ? {
+        type: 'employee',
+        id: loan.employees.id,
+        name: loan.employees.full_name,
+        department: loan.employees.departments?.name,
+      } : loan.departments ? {
+        type: 'department',
+        id: loan.departments.id,
+        name: loan.departments.name,
+      } : null,
+      checkoutDate: new Date(loan.checkout_date),
+      expectedReturnDate: new Date(loan.expected_return_date),
+      status: loan.status,
+      notes: loan.notes,
     }));
   };
 
@@ -196,14 +234,9 @@ const CheckoutManagement = () => {
           { assigned_to_type: 'employee', employee_id: employee.id, employee_name: employee.full_name }
         );
         // Refresh data
-        try {
-          const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
-          setActiveLoans(loans);
-          setInStorageAssets(assets);
-        } catch (fetchError) {
-          console.error('Error refetching data after loan insert:', fetchError);
-          setNotifications((prev) => [...prev, { id: Date.now(), message: `Error refetching data: ${fetchError.message}`, type: "error" }]);
-        }
+        const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
+        setActiveLoans(loans);
+        setInStorageAssets(assets);
       }
     }
 
@@ -250,14 +283,9 @@ const CheckoutManagement = () => {
           { assigned_to_type: 'department', department_id: department.id, department_name: department.name }
         );
         // Refresh data
-        try {
-          const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
-          setActiveLoans(loans);
-          setInStorageAssets(assets);
-        } catch (fetchError) {
-          console.error('Error refetching data after loan insert:', fetchError);
-          setNotifications((prev) => [...prev, { id: Date.now(), message: `Error refetching data: ${fetchError.message}`, type: "error" }]);
-        }
+        const [loans, assets] = await Promise.all([fetchActiveLoans(), fetchInStorageAssets()]);
+        setActiveLoans(loans);
+        setInStorageAssets(assets);
       }
     }
 

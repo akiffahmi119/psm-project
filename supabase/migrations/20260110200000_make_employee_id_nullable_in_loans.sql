@@ -1,0 +1,2 @@
+ALTER TABLE public.loans
+ALTER COLUMN employee_id DROP NOT NULL;
