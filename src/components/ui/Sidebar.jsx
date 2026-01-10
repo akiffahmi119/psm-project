@@ -15,7 +15,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       path: '/dashboard',
       icon: 'LayoutDashboard',
       roles: ['system_admin', 'it_staff', 'department_pic'],
-      category: 'General'
+      category: 'Asset Management and Workflow'
     },
 
     {
@@ -23,14 +23,14 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       path: '/asset-list',
       icon: 'Package',
       roles: ['system_admin', 'it_staff', 'department_pic'],
-      category: 'General'
+      category: 'Asset Management and Workflow'
     },
     {
       label: 'Add Asset',
       path: '/asset-registration',
       icon: 'Plus',
-      roles: ['system_admin', 'it_staff'], // Changed 'admin' to 'system_admin'
-      category: 'General'
+      roles: ['system_admin', 'it_staff'],
+      category: 'Asset Management and Workflow'
     },
     {
     
@@ -38,42 +38,42 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse, user }) => {
       path: '/checkout-management',
       icon: 'UserCheck',
       roles: ['system_admin', 'it_staff'],
-      category: 'Management'
-    },
-    {
-      label: 'Supplier Management',
-      path: '/supplier-management',
-      icon: 'Truck',
-      roles: ['system_admin', 'it_staff'],
-      category: 'Management'
+      category: 'Asset Management and Workflow'
     },
     {
       label: 'Lifecycle Planning',
       path: '/lifecycle-planning',
       icon: 'TrendingUp',
       roles: ['system_admin', 'it_staff'],
-      category: 'Management'
+      category: 'Asset Management and Workflow'
+    },
+    {
+      label: 'Supplier Management',
+      path: '/supplier-management',
+      icon: 'Truck',
+      roles: ['system_admin', 'it_staff'],
+      category: 'Organization'
     },
     {
       label: 'User Registration',
       path: '/admin/user-registration',
-      icon: 'UserCog', // Assuming 'UserCog' is a valid icon
+      icon: 'UserCog',
       roles: ['system_admin'],
-      category: 'Admin'
+      category: 'Organization'
     },
     {
       label: 'Employee Management',
       path: '/admin/employee-management',
-      icon: 'Users', // Assuming 'Users' is a valid icon
+      icon: 'Users',
       roles: ['system_admin', 'manager'],
-      category: 'Admin'
+      category: 'Organization'
     },
     {
       label: 'Department Management',
       path: '/admin/department-management',
       icon: 'Building2',
       roles: ['system_admin', 'manager'],
-      category: 'Admin'
+      category: 'Organization'
     }
   ];
 
