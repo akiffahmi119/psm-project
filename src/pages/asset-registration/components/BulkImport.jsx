@@ -5,8 +5,10 @@ import { useSelector } from 'react-redux';
 import { logActivity } from '../../../utils/activityLogger';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
+import { useNavigate } from 'react-router-dom';
 
 const BulkImport = () => {
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [parsedData, setParsedData] = useState([]);
   const [isParsing, setIsParsing] = useState(false);
@@ -113,6 +115,15 @@ const BulkImport = () => {
             </p>
           </div>
         </div>
+      </div>
+      
+      <div className="text-center mt-4">
+        <Button 
+          variant="link" 
+          onClick={() => navigate('/bulk-import-template')}
+        >
+          Download CSV Template
+        </Button>
       </div>
 
       {/* Preview and Import */}

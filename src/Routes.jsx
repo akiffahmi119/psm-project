@@ -20,6 +20,7 @@ import UserRegistration from 'pages/admin/UserRegistration';
 import EmployeeManagement from 'pages/admin/EmployeeManagement';
 import DepartmentManagement from 'pages/admin/DepartmentManagement';
 import AllActivities from 'pages/AllActivities'; // Import AllActivities
+import BulkImportTemplate from 'pages/BulkImportTemplate'; // Import BulkImportTemplate
 
 const Routes = () => {
   return (
@@ -49,6 +50,7 @@ const Routes = () => {
             <Route path="/asset-list" element={<AssetListPage />} />
             <Route path="/asset-details/:id" element={<AssetDetails />} />
             <Route path="/asset-registration" element={<AssetRegistration />} />
+            <Route path="/bulk-import-template" element={<BulkImportTemplate />} /> {/* New route for BulkImportTemplate */}
             <Route path="/all-activities" element={<AllActivities />} /> {/* New route for AllActivities */}
 
             {/* Admin Routes */}
