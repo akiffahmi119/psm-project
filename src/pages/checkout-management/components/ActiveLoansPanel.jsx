@@ -1,64 +1,40 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Button from '../../../components/ui/Button';
 import AppIcon from '../../../components/AppIcon';
-import { cn } from '../../../utils/cn';
 
-const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
-  const [selectedLoans, setSelectedLoans] = useState([]);
+const ActiveLoansPanel = ({ loans, filters, onCheckIn }) => {
   const [sortBy, setSortBy] = useState('checkoutDate');
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Filter and sort loans
-  const filteredLoans = useMemo(() => {
-    let filtered = loans || [];
-
-    // Apply filters
-    if (filters?.employee) {
-      filtered = filtered?.filter(loan =>
-        loan?.employee?.full_name?.toLowerCase()?.includes(filters?.employee?.toLowerCase()) ||
-        loan?.employee?.email?.toLowerCase()?.includes(filters?.employee?.toLowerCase())
-      );
+  const filteredLoans = (loans || [])?.filter(loan => {
+    if (filters?.employee && !(
+      loan?.assignedTo?.name?.toLowerCase()?.includes(filters.employee.toLowerCase()) ||
+      loan?.assignedTo?.email?.toLowerCase()?.includes(filters.employee.toLowerCase())
+    )) {
+      return false;
     }
 
-    if (filters?.department) {
-      filtered = filtered?.filter(loan =>
-        loan?.employee?.department?.toLowerCase() === filters?.department?.toLowerCase()
-      );
+    if (filters?.department && loan?.assignedTo?.department?.toLowerCase() !== filters.department.toLowerCase()) {
+      return false;
     }
 
-    if (filters?.category) {
-      filtered = filtered?.filter(loan =>
-        loan?.assetCategory?.toLowerCase() === filters?.category?.toLowerCase()
-      );
+    if (filters?.category && loan?.assetCategory?.toLowerCase() !== filters.category.toLowerCase()) {
+      return false;
     }
 
-    if (filters?.status && filters?.status !== 'all') {
-      filtered = filtered?.filter(loan => {
-        switch (filters?.status) {
-          case 'active':
-            return loan?.status === 'active' && !isOverdue(loan);
-          case 'overdue':
-            return isOverdue(loan);
-          case 'due-soon':
-            return isDueSoon(loan);
-          default:
-            return true;
-        }
-      });
+    if (filters?.status && filters?.status !== 'all' && loan?.status !== filters.status) {
+      return false;
     }
 
-    if (filters?.overdue) {
-      filtered = filtered?.filter(loan => isOverdue(loan));
-    }
-
-    // Sort loans
-    filtered?.sort((a, b) => {
+    return true;
+  })?.sort((a, b) => {
       let aValue = a?.[sortBy];
       let bValue = b?.[sortBy];
 
       if (sortBy === 'employee') {
-        aValue = a?.employee?.full_name;
-        bValue = b?.employee?.full_name;
+        aValue = a?.assignedTo?.name;
+        bValue = b?.assignedTo?.name;
       } else if (sortBy === 'assetName') {
         aValue = a?.assetName;
         bValue = b?.assetName;
@@ -77,50 +53,12 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
       return 0;
     });
 
-    return filtered;
-  }, [loans, filters, sortBy, sortOrder]);
-
-  const isOverdue = (loan) => {
-    return new Date() > new Date(loan?.expectedReturnDate);
-  };
-
-  const isDueSoon = (loan) => {
-    const dueDate = new Date(loan?.expectedReturnDate);
-    const today = new Date();
-    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-    return daysUntilDue >= 0 && daysUntilDue <= 7;
-  };
-
-  const getUrgencyColor = (loan) => {
-    if (isOverdue(loan)) return 'text-error';
-    if (isDueSoon(loan)) return 'text-warning';
-    return 'text-success';
-  };
-
-  const getUrgencyBadge = (loan) => {
-    if (isOverdue(loan)) return { label: 'Overdue', color: 'bg-error/10 text-error border-error/20' };
-    if (isDueSoon(loan)) return { label: 'Due Soon', color: 'bg-warning/10 text-warning border-warning/20' };
-    return { label: 'Active', color: 'bg-success/10 text-success border-success/20' };
-  };
-
   const formatDate = (date) => {
     return new Date(date)?.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
-  };
-
-  const getDaysRemaining = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
-    if (diffDays === 0) return 'Due today';
-    if (diffDays === 1) return '1 day remaining';
-    return `${diffDays} days remaining`;
   };
 
   const handleSort = (field) => {
@@ -132,30 +70,6 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
     }
   };
 
-  const handleSelectLoan = (loanId) => {
-    setSelectedLoans(prev =>
-      prev?.includes(loanId)
-        ? prev?.filter(id => id !== loanId)
-        : [...prev, loanId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedLoans?.length === filteredLoans?.length) {
-      setSelectedLoans([]);
-    } else {
-      setSelectedLoans(filteredLoans?.map(loan => loan?.id));
-    }
-  };
-
-  const handleBulkCheckIn = () => {
-    onBulkOperation?.('bulk-checkin', selectedLoans);
-    setSelectedLoans([]);
-  };
-
-  const handleSendReminder = (loan) => {
-    onBulkOperation?.('send-reminder', [loan?.id]);
-  };
 
   const SortButton = ({ field, children }) => (
     <button
@@ -179,7 +93,7 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
           {loans?.length ? 'No loans match your current filters.' : 'All assets are currently in storage.'}
         </p>
         {loans?.length && (
-          <Button variant="outline" onClick={() => onBulkOperation?.('clear-filters', [])}>
+          <Button variant="outline">
             Clear Filters
           </Button>
         )}
@@ -189,63 +103,22 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
 
   return (
     <div className="space-y-4">
-      {/* Bulk Actions Bar */}
-      {selectedLoans?.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
-          <span className="text-sm font-medium text-foreground">
-            {selectedLoans?.length} item{selectedLoans?.length !== 1 ? 's' : ''} selected
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              iconName="Mail"
-              iconPosition="left"
-              onClick={() => onBulkOperation?.('send-reminders', selectedLoans)}
-            >
-              Send Reminders
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              iconName="LogIn"
-              iconPosition="left"
-              onClick={handleBulkCheckIn}
-            >
-              Bulk Check In
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              iconName="X"
-              onClick={() => setSelectedLoans([])}
-            />
-          </div>
-        </div>
-      )}
+
 
       {/* Table Header */}
       <div className="bg-muted/50 rounded-lg p-4 border border-border">
         <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium text-muted-foreground">
-          <div className="col-span-1">
-            <input
-              type="checkbox"
-              checked={selectedLoans?.length === filteredLoans?.length && filteredLoans?.length > 0}
-              onChange={handleSelectAll}
-              className="w-4 h-4 rounded border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            />
-          </div>
           <div className="col-span-3">
             <SortButton field="assetName">Asset</SortButton>
           </div>
-          <div className="col-span-2">
-            <SortButton field="employee">Employee</SortButton>
+          <div className="col-span-3">
+            <SortButton field="employee">Assigned To</SortButton>
           </div>
           <div className="col-span-2">
-            <SortButton field="checkoutDate">Checked Out</SortButton>
+            <SortButton field="department">Department</SortButton>
           </div>
           <div className="col-span-2">
-            <SortButton field="expectedReturnDate">Due Date</SortButton>
+            <SortButton field="checkoutDate">Assigned On</SortButton>
           </div>
           <div className="col-span-1">Status</div>
           <div className="col-span-1">Actions</div>
@@ -255,27 +128,12 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
       {/* Loans List */}
       <div className="space-y-2">
         {filteredLoans?.map((loan) => {
-          const urgencyBadge = getUrgencyBadge(loan);
-          
           return (
             <div
               key={loan?.id}
-              className={cn(
-                "bg-card rounded-lg border border-border p-4 transition-all duration-200 hover:shadow-md",
-                selectedLoans?.includes(loan?.id) && "ring-2 ring-primary/20 border-primary/30"
-              )}
+              className="bg-card rounded-lg border border-border p-4 transition-all duration-200 hover:shadow-md"
             >
               <div className="grid grid-cols-12 gap-4 items-center">
-                {/* Checkbox */}
-                <div className="col-span-1">
-                  <input
-                    type="checkbox"
-                    checked={selectedLoans?.includes(loan?.id)}
-                    onChange={() => handleSelectLoan(loan?.id)}
-                    className="w-4 h-4 rounded border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  />
-                </div>
-
                 {/* Asset Info */}
                 <div className="col-span-3">
                   <div className="flex items-center gap-3">
@@ -289,19 +147,21 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
                   </div>
                 </div>
 
-                {/* Employee Info */}
-                <div className="col-span-2">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={loan?.employee?.avatar}
-                      alt={loan?.employee?.avatarAlt}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+                {/* Assigned To Info */}
+                <div className="col-span-3">
+                  {loan?.assignedTo?.type === 'employee' ? (
                     <div>
-                      <p className="font-medium text-foreground text-sm">{loan?.employee?.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{loan?.employee?.department}</p>
+                      <p className="font-medium text-foreground text-sm">{loan.assignedTo.name}</p>
+                      <p className="text-xs text-muted-foreground">{loan.assignedTo.email}</p>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">-</p>
+                  )}
+                </div>
+
+                {/* Department Info */}
+                <div className="col-span-2">
+                  <p className="text-sm text-foreground">{loan?.assignedTo?.type === 'department' ? loan.assignedTo.name : loan?.assignedTo?.department || 'N/A'}</p>
                 </div>
 
                 {/* Checkout Date */}
@@ -309,38 +169,14 @@ const ActiveLoansPanel = ({ loans, filters, onCheckIn, onBulkOperation }) => {
                   <p className="text-sm text-foreground">{formatDate(loan?.checkoutDate)}</p>
                 </div>
 
-                {/* Due Date */}
-                <div className="col-span-2">
-                  <p className={cn("text-sm font-medium", getUrgencyColor(loan))}>
-                    {formatDate(loan?.expectedReturnDate)}
-                  </p>
-                  <p className={cn("text-xs", getUrgencyColor(loan))}>
-                    {getDaysRemaining(loan?.expectedReturnDate)}
-                  </p>
-                </div>
-
-                {/* Status Badge */}
+                {/* Status */}
                 <div className="col-span-1">
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border",
-                    urgencyBadge?.color
-                  )}>
-                    {urgencyBadge?.label}
-                  </span>
+                  <p className="text-sm capitalize">{loan?.status}</p>
                 </div>
 
                 {/* Actions */}
                 <div className="col-span-1">
                   <div className="flex items-center gap-1">
-                    {isOverdue(loan) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        iconName="Mail"
-                        onClick={() => handleSendReminder(loan)}
-                        className="text-warning hover:text-warning"
-                      />
-                    )}
                     <Button
                       variant="ghost"
                       size="sm"

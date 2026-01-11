@@ -113,9 +113,9 @@ const UserRegistration = () => {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-3 text-foreground">
-        <UserPlus size={28} /> Admin User Registration
+        <UserPlus size={28} /> User Registration
       </h1>
       <p className="text-muted-foreground mb-8">
         Use this form to provision new user accounts and assign their access roles (Admin, IT Staff, or Department PIC) within the system.
@@ -131,142 +131,144 @@ const UserRegistration = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-card p-8 rounded-xl shadow-lg border border-border">
-        <Input
-          label="Full Name"
-          type="text"
-          placeholder="e.g., John Smith"
-          {...register('fullName', { required: 'Full Name is required' })}
-          error={errors.fullName?.message}
-        />
-        <Input
-          label="Email (Used for Login)"
-          type="email"
-          placeholder="user@panasonic.com"
-          {...register('email', { required: 'Email is required', pattern: { value: /\S+@\S+$/i, message: 'Invalid email format' } })}
-          error={errors.email?.message}
-        />
-        <Input
-          label="Temporary Password"
-          type="password"
-          placeholder="Min 6 characters"
-          {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
-          error={errors.password?.message}
-        />
-        <Controller
-          name="role"
-          control={control}
-          rules={{ required: 'Role assignment is required' }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Assign Role"
-              options={roles}
-              placeholder="Select a role..."
-              error={errors.role?.message}
-            />
-          )}
-        />
-        <Controller
-          name="department_id"
-          control={control}
-          rules={{ required: 'Department is required' }}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Assign Department"
-              options={departments}
-              placeholder="Select a department..."
-              error={errors.department_id?.message}
-            />
-          )}
-        />
-        <Button 
-          type="submit" 
-          loading={isSubmitting} 
-          disabled={isSubmitting}
-          className="w-full"
-        >
-          {isSubmitting ? 'Registering User...' : 'Register User'}
-        </Button>
-      </form>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-card p-8 rounded-xl shadow-lg border border-border">
+          <Input
+            label="Full Name"
+            type="text"
+            placeholder="e.g., John Smith"
+            {...register('fullName', { required: 'Full Name is required' })}
+            error={errors.fullName?.message}
+          />
+          <Input
+            label="Email (Used for Login)"
+            type="email"
+            placeholder="user@panasonic.com"
+            {...register('email', { required: 'Email is required', pattern: { value: /\S+@\S+$/i, message: 'Invalid email format' } })}
+            error={errors.email?.message}
+          />
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Min 6 characters"
+            {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
+            error={errors.password?.message}
+          />
+          <Controller
+            name="role"
+            control={control}
+            rules={{ required: 'Role assignment is required' }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Assign Role"
+                options={roles}
+                placeholder="Select a role..."
+                error={errors.role?.message}
+              />
+            )}
+          />
+          <Controller
+            name="department_id"
+            control={control}
+            rules={{ required: 'Department is required' }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                label="Assign Department"
+                options={departments}
+                placeholder="Select a department..."
+                error={errors.department_id?.message}
+              />
+            )}
+          />
+          <Button 
+            type="submit" 
+            loading={isSubmitting} 
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? 'Registering User...' : 'Register User'}
+          </Button>
+        </form>
 
-      <div className="mt-10 bg-card p-8 rounded-xl shadow-lg border border-border">
-        <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-2">
-          Registered Users
-        </h2>
+        <div className="bg-card p-8 rounded-xl shadow-lg border border-border">
+          <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-2">
+            Registered Users
+          </h2>
 
-        {loadingUsers ? (
-          <div className="text-center py-4">Loading users...</div>
-        ) : users.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">No registered users found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Full Name
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Department
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-card divide-y divide-border">
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {user.full_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {user.role}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {user.departments ? user.departments.name : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-primary mr-2"
-                        onClick={() => {
-                          setEditingUser(user);
-                          setShowEditUserModal(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => {
-                          setUserToDelete(user);
-                          setShowDeleteConfirmModal(true);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </td>
+          {loadingUsers ? (
+            <div className="text-center py-4">Loading users...</div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">No registered users found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Full Name
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Department
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="bg-card divide-y divide-border">
+                  {users.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
+                        {user.full_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {user.role}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {user.departments ? user.departments.name : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-primary mr-2"
+                          onClick={() => {
+                            setEditingUser(user);
+                            setShowEditUserModal(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => {
+                            setUserToDelete(user);
+                            setShowDeleteConfirmModal(true);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {showEditUserModal && editingUser && (

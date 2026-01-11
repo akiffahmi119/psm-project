@@ -151,19 +151,6 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
                   )}
                 </button>
               </th>
-              <th className="text-left p-4 font-medium text-muted-foreground">
-                <button
-                  onClick={() => handleSort('last_interaction')}
-                  className="flex items-center gap-2 hover:text-foreground transition-colors"
-                >
-                  Last Contact
-                  {sortConfig?.key === 'last_interaction' && (
-                    <span className="text-xs">
-                      {sortConfig?.direction === 'asc' ? '↑' : '↓'}
-                    </span>
-                  )}
-                </button>
-              </th>
               <th className="text-center p-4 font-medium text-muted-foreground">
                 Actions
               </th>
@@ -232,11 +219,6 @@ const SupplierTable = ({ suppliers, selectedSupplier, onSupplierSelect, onSuppli
                     <div className="text-sm text-muted-foreground">
                       {supplier?.total_orders} orders
                     </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="text-sm text-foreground">
-                    {formatDate(supplier?.last_interaction)}
                   </div>
                 </td>
                 <td className="p-4" onClick={(e) => e?.stopPropagation()}>

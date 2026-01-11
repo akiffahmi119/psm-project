@@ -2,24 +2,39 @@ import React, { useState } from 'react';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import Input from '../../../components/ui/Input';
-
-
+import Icon from '../../../components/AppIcon';
 import { formatAssetStatus } from '../../../utils/formatters';
 
 
 const FilterToolbar = ({ 
+  filters: propFilters, // Use propFilters to avoid state conflict
   onFilterChange, 
   onBulkAction, 
   selectedCount = 0, 
   totalCount = 0,
-  onExport 
+  onExport,
+  departments = [], // New prop
+  suppliers = []    // New prop
 }) => {
-  const [filters, setFilters] = useState({
+  // Use local state for internal management of filters if propFilters is not immediately available,
+  // but prioritize propFilters for controlled component behavior.
+  const [localFilters, setLocalFilters] = useState(propFilters || {
+    searchQuery: '',
     category: '',
     status: [],
+    department: '',
+    supplier: '',
     location: '',
     dateRange: { start: '', end: '' }
   });
+
+  // Keep local state in sync with propFilters
+  React.useEffect(() => {
+    if (propFilters) {
+      setLocalFilters(propFilters);
+    }
+  }, [propFilters]);
+
 
   const categoryOptions = [
     { value: '', label: 'All Categories' },
@@ -61,39 +76,57 @@ const FilterToolbar = ({
   ];
 
   const handleFilterChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters); // Propagate change to parent
   };
 
   const handleDateRangeChange = (field, value) => {
-    const newDateRange = { ...filters?.dateRange, [field]: value };
-    const newFilters = { ...filters, dateRange: newDateRange };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    const newDateRange = { ...localFilters?.dateRange, [field]: value };
+    const newFilters = { ...localFilters, dateRange: newDateRange };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters); // Propagate change to parent
   };
 
   const clearAllFilters = () => {
     const clearedFilters = {
+      searchQuery: '',
       category: '',
       status: [],
+      department: '',
+      supplier: '',
       location: '',
       dateRange: { start: '', end: '' }
     };
-    setFilters(clearedFilters);
-    onFilterChange(clearedFilters);
+    setLocalFilters(clearedFilters);
+    onFilterChange(clearedFilters); // Propagate change to parent
   };
 
-  const hasActiveFilters = filters?.category || filters?.status?.length > 0 || filters?.location || filters?.dateRange?.start || filters?.dateRange?.end;
+  // Check if any filter is active for conditional rendering of "Clear Filters" button
+  const hasActiveFilters = localFilters?.searchQuery || localFilters?.category || localFilters?.status?.length > 0 || 
+                           localFilters?.department || localFilters?.supplier || localFilters?.location || 
+                           localFilters?.dateRange?.start || localFilters?.dateRange?.end;
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-6">
+      {/* Search Input */}
+      <div className="relative mb-4">
+        <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search by Tag, Name, or Serial..."
+          className="w-full pl-10 pr-4 py-2"
+          value={localFilters?.searchQuery || ''}
+          onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
+        />
+      </div>
+
       {/* Filter Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <Select
           label="Category"
           options={categoryOptions}
-          value={filters?.category}
+          value={localFilters?.category}
           onChange={(value) => handleFilterChange('category', value)}
           placeholder="Select category"
         />
@@ -101,17 +134,35 @@ const FilterToolbar = ({
         <Select
           label="Status"
           options={statusOptions}
-          value={filters?.status}
+          value={localFilters?.status}
           onChange={(value) => handleFilterChange('status', value)}
           multiple
           searchable
           placeholder="Select status"
         />
 
+        {/* New Department Filter */}
+        <Select
+          label="Department"
+          options={[{ value: '', label: 'All Departments' }, ...departments]}
+          value={localFilters?.department}
+          onChange={(value) => handleFilterChange('department', value)}
+          placeholder="Select department"
+        />
+
+        {/* New Supplier Filter */}
+        <Select
+          label="Supplier"
+          options={[{ value: '', label: 'All Suppliers' }, ...suppliers]}
+          value={localFilters?.supplier}
+          onChange={(value) => handleFilterChange('supplier', value)}
+          placeholder="Select supplier"
+        />
+
         <Select
           label="Location"
           options={locationOptions}
-          value={filters?.location}
+          value={localFilters?.location}
           onChange={(value) => handleFilterChange('location', value)}
           placeholder="Select location"
         />
@@ -122,13 +173,13 @@ const FilterToolbar = ({
             <Input
               type="date"
               placeholder="Start date"
-              value={filters?.dateRange?.start}
+              value={localFilters?.dateRange?.start || ''}
               onChange={(e) => handleDateRangeChange('start', e?.target?.value)}
             />
             <Input
               type="date"
               placeholder="End date"
-              value={filters?.dateRange?.end}
+              value={localFilters?.dateRange?.end || ''}
               onChange={(e) => handleDateRangeChange('end', e?.target?.value)}
             />
           </div>
@@ -167,7 +218,7 @@ const FilterToolbar = ({
               
               <Select
                 options={bulkActionOptions}
-                value=""
+                value="" // This should be controlled by parent or have internal state if not directly used for filtering
                 onChange={(value) => onBulkAction(value)}
                 placeholder="Bulk Actions"
                 className="w-40"

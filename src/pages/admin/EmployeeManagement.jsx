@@ -87,7 +87,7 @@ const EmployeeManagement = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Input label="Full Name" type="text" {...register('fullName', { required: 'Full Name is required' })} error={errors.fullName?.message} />
             <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
-            <Input label="Employee Number" type="text" {...register('employeeNumber')} error={errors.employeeNumber?.message} />
+            <Input label="Employee ID" type="text" {...register('employeeNumber')} error={errors.employeeNumber?.message} />
             <Controller
               name="department_id"
               control={control}

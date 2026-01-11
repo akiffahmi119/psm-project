@@ -105,7 +105,6 @@ const SupplierManagement = () => {
       address: supplierData.address,
       website: supplierData.website,
       tax_id: supplierData.taxId,
-      payment_terms: supplierData.paymentTerms,
       contract_start: supplierData.contractStart,
       contract_end: supplierData.contractEnd,
       status: supplierData.status,

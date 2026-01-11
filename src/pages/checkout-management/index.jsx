@@ -59,7 +59,7 @@ const CheckoutManagement = () => {
         status,
         notes,
         assets (id, product_name, category),
-        employees (id, full_name, departments (name)),
+        employees (id, full_name, email, departments (name)),
         departments (id, name)
       `)
       .in('status', ['active', 'overdue']);
@@ -79,6 +79,7 @@ const CheckoutManagement = () => {
         type: 'employee',
         id: loan.employees.id,
         name: loan.employees.full_name,
+        email: loan.employees.email,
         department: loan.employees.departments?.name,
       } : loan.departments ? {
         type: 'department',
@@ -136,25 +137,6 @@ const CheckoutManagement = () => {
       subtitle: "Ready for checkout",
       icon: "CheckCircle",
       color: "success"
-    },
-    {
-      title: "Overdue Returns",
-      value: activeLoans.filter(loan => new Date(loan.expectedReturnDate) < new Date()).length,
-      subtitle: "Past due date",
-      icon: "AlertTriangle",
-      color: "error"
-    },
-    {
-      title: "Due This Week",
-      value: activeLoans.filter(loan => {
-        const dueDate = new Date(loan.expectedReturnDate);
-        const today = new Date();
-        const nextWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
-        return dueDate > today && dueDate <= nextWeek;
-      }).length,
-      subtitle: "Returns expected",
-      icon: "Calendar",
-      color: "warning"
     }
   ];
 

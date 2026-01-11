@@ -91,14 +91,6 @@ const PerformanceMetrics = ({ suppliers }) => {
       trend: null
     },
     {
-      title: 'Preferred Vendors',
-      value: metrics?.preferredVendors?.toString(),
-      subtitle: `${Math?.round((metrics?.preferredVendors / (metrics?.totalSuppliers || 1)) * 100)}% of total`,
-      icon: Award,
-      color: 'primary',
-      trend: null
-    },
-    {
       title: 'Active Rate',
       value: `${getActiveSupplierPercentage()}%`,
       subtitle: 'Supplier availability',

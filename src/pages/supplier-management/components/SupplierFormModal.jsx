@@ -13,7 +13,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
     address: '',
     website: '',
     taxId: '',
-    paymentTerms: '',
     contractStart: '',
     contractEnd: '',
     status: 'active',
@@ -23,15 +22,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const paymentTermsOptions = [
-    'Net 15',
-    'Net 30',
-    'Net 45',
-    'Net 60',
-    'COD',
-    'Prepaid'
-  ];
 
   const statusOptions = [
     { value: 'active', label: 'Active' },
@@ -49,7 +39,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
         address: supplier?.address || '',
         website: supplier?.website || '',
         taxId: supplier?.tax_id || '',
-        paymentTerms: supplier?.payment_terms || '',
         contractStart: supplier?.contract_start || '',
         contractEnd: supplier?.contract_end || '',
         status: supplier?.status || 'active',
@@ -66,7 +55,6 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
         address: '',
         website: '',
         taxId: '',
-        paymentTerms: '',
         contractStart: '',
         contractEnd: '',
         status: 'active',
@@ -248,34 +236,7 @@ const SupplierFormModal = ({ isOpen, onClose, supplier, onSubmit }) => {
             <div>
               <h3 className="text-lg font-medium text-foreground mb-4">Business Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Payment Terms</label>
-                  <select
-                    value={formData?.paymentTerms}
-                    onChange={handleInputChange('paymentTerms')}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={isSubmitting}
-                  >
-                    <option value="">Select payment terms</option>
-                    {paymentTermsOptions?.map(term => (
-                      <option key={term} value={term}>{term}</option>
-                    ))}
-                  </select>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Status</label>
-                  <select
-                    value={formData?.status}
-                    onChange={handleInputChange('status')}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={isSubmitting}
-                  >
-                    {statusOptions?.map(status => (
-                      <option key={status?.value} value={status?.value}>{status?.label}</option>
-                    ))}
-                  </select>
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Rating</label>

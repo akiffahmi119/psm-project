@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import { supabase } from '../../lib/supabaseClient';
@@ -10,6 +10,8 @@ import { NotificationContainer } from '../../components/ui/NotificationToast';
 import { formatAssetStatus } from '../../utils/formatters';
 import { useSelector } from 'react-redux'; // Import useSelector
 import { logActivity } from '../../utils/activityLogger'; // Import logActivity
+import FilterToolbar from './components/FilterToolbar'; // Import FilterToolbar
+import AssetTable from './components/AssetTable'; // Import AssetTable
 
 // --- QR Code Modal Component ---
 const QRCodeModal = ({ asset, onClose }) => {
@@ -51,8 +53,6 @@ const AssetList = () => {
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(true);
     const [assets, setAssets] = useState([]);
-    const [filterCategory, setFilterCategory] = useState('All');
-    const [searchQuery, setSearchQuery] = useState('');
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [qrAsset, setQrAsset] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
@@ -61,9 +61,57 @@ const AssetList = () => {
     const { user: authUser } = useSelector((state) => state.auth); // Get user from Redux store
     const userId = authUser?.id;
 
+    // Filter States
+    const [filters, setFilters] = useState({
+        searchQuery: '',
+        category: '',
+        status: [],
+        department: '',
+        supplier: '',
+        location: '',
+        dateRange: { start: '', end: '' }
+    });
+
+    // Data for filters
+    const [departments, setDepartments] = useState([]);
+    const [suppliers, setSuppliers] = useState([]);
+
     const addNotification = (message, type) => {
         setNotifications(prev => [...prev, { id: Date.now(), message, type }]);
     };
+
+    const handleAssetClick = (asset) => setSelectedAsset(asset);
+    const closePanel = () => setSelectedAsset(null);
+    const handleOpenQrModal = (asset) => setQrAsset(asset);
+    const handleCloseQrModal = () => setQrAsset(null);
+
+    const handleFilterChange = (newFilters) => {
+        setFilters(prev => ({ ...prev, ...newFilters }));
+    };
+
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+        setSortConfig({ key, direction });
+    };
+
+    // Helper to fetch filter options
+    useEffect(() => {
+        const fetchFilterOptions = async () => {
+            try {
+                const { data: departmentsData, error: departmentsError } = await supabase.from('departments').select('id, name');
+                if (departmentsError) throw departmentsError;
+                setDepartments(departmentsData.map(dep => ({ value: dep.id, label: dep.name })));
+
+                const { data: suppliersData, error: suppliersError } = await supabase.from('suppliers').select('id, company_name');
+                if (suppliersError) throw suppliersError;
+                setSuppliers(suppliersData.map(sup => ({ value: sup.id, label: sup.company_name })));
+            } catch (error) {
+                addNotification(`Error fetching filter options: ${error.message}`, 'error');
+            }
+        };
+        fetchFilterOptions();
+    }, []);
 
     useEffect(() => {
         if (location.state?.message) {
@@ -71,49 +119,67 @@ const AssetList = () => {
             window.history.replaceState({}, '');
         }
 
-        const fetchAssetsAndSuppliers = async () => {
+        const fetchAssets = async () => {
             setIsLoading(true);
             try {
-                const [
-                    { data: assetsData, error: assetsError },
-                    { data: suppliersData, error: suppliersError }
-                ] = await Promise.all([
-                    supabase.from('assets').select(`*, departments ( name )`).order(sortConfig.key, { ascending: sortConfig.direction === 'asc' }),
-                    supabase.from('suppliers').select('*')
-                ]);
+                let query = supabase
+                    .from('assets')
+                    .select(`*, departments ( name ), suppliers ( company_name )`); // Ensure suppliers is selected
+
+                // Apply filters
+                if (filters.searchQuery) {
+                    query = query.or(`product_name.ilike.%${filters.searchQuery}%,asset_tag.ilike.%${filters.searchQuery}%,serial_number.ilike.%${filters.searchQuery}%`);
+                }
+                if (filters.category) {
+                    query = query.ilike('category', `%${filters.category}%`);
+                }
+                if (filters.status && filters.status.length > 0) {
+                    query = query.in('status', filters.status);
+                }
+                if (filters.department) {
+                    query = query.eq('current_department_id', filters.department);
+                }
+                if (filters.supplier) {
+                    query = query.eq('supplier_id', filters.supplier);
+                }
+                if (filters.location) {
+                    query = query.eq('location', filters.location);
+                }
+                if (filters.dateRange.start) {
+                    query = query.gte('purchase_date', filters.dateRange.start);
+                }
+                if (filters.dateRange.end) {
+                    query = query.lte('purchase_date', filters.dateRange.end);
+                }
+
+                // Handle sorting for nested properties
+                const isNestedSort = sortConfig.key.includes('.');
+                if (isNestedSort) {
+                    const [foreignTable, column] = sortConfig.key.split('.');
+                    query = query.order(column, { foreignTable, ascending: sortConfig.direction === 'asc' });
+                } else {
+                    query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+                }
+
+                const { data: assetsData, error: assetsError } = await query;
 
                 if (assetsError) throw assetsError;
-                if (suppliersError) throw suppliersError;
-
-                const suppliersMap = suppliersData.reduce((acc, supplier) => {
-                    acc[supplier.id] = supplier;
-                    return acc;
-                }, {});
-
-                const joinedAssets = assetsData.map(asset => ({
-                    ...asset,
-                    suppliers: suppliersMap[asset.supplier_id]
-                }));
                 
-                setAssets(joinedAssets);
+                setAssets(assetsData);
 
             } catch (error) {
-                addNotification(`Error fetching data: ${error.message}`, 'error');
+                addNotification(`Error fetching assets: ${error.message}`, 'error');
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchAssetsAndSuppliers();
-    }, [sortConfig, location.state]);
+        fetchAssets();
+    }, [sortConfig, location.state, filters]);
     
     const handleDeleteAsset = async (asset) => {
         if (window.confirm(`Are you sure you want to delete ${asset.product_name} (${asset.asset_tag})? This action cannot be undone.`)) {
             try {
-                const { error } = await supabase.from('assets').delete().eq('id', asset.id);
-                if (error) throw error;
-                setAssets(currentAssets => currentAssets.filter(a => a.id !== asset.id));
-                addNotification('Asset deleted successfully.', 'success');
-                // Log activity for asset deletion
+                // Log activity before deletion
                 await logActivity(
                   'asset_deleted',
                   `Deleted asset: ${asset.product_name} (${asset.asset_tag})`,
@@ -121,6 +187,12 @@ const AssetList = () => {
                   userId,
                   { deleted_asset_name: asset.product_name, deleted_asset_tag: asset.asset_tag }
                 );
+
+                const { error } = await supabase.from('assets').delete().eq('id', asset.id);
+                if (error) throw error;
+                setAssets(currentAssets => currentAssets.filter(a => a.id !== asset.id));
+                addNotification('Asset deleted successfully.', 'success');
+                
                 if (selectedAsset && selectedAsset.id === asset.id) {
                     setSelectedAsset(null);
                 }
@@ -137,46 +209,6 @@ const AssetList = () => {
         setSelectedAsset(prev => ({ ...prev, ...updatedAsset }));
     };
 
-    const sortedAndFilteredAssets = useMemo(() => {
-        return assets
-          .filter(asset => {
-            const matchesCategory = filterCategory === 'All' || asset.category === filterCategory;
-            const searchLower = searchQuery.toLowerCase();
-            const matchesSearch = (asset.product_name || '').toLowerCase().includes(searchLower) ||
-                                (asset.asset_tag || '').toLowerCase().includes(searchLower) ||
-                                (asset.serial_number || '').toLowerCase().includes(searchLower);
-            return matchesCategory && matchesSearch;
-        });
-    }, [assets, filterCategory, searchQuery]);
-
-    const handleSort = (key) => {
-        let direction = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
-        setSortConfig({ key, direction });
-    };
-
-    const getSortIcon = (key) => {
-        if (sortConfig.key !== key) return 'ArrowUpDown';
-        return sortConfig.direction === 'asc' ? 'ArrowUp' : 'ArrowDown';
-    };
-
-    const handleAssetClick = (asset) => setSelectedAsset(asset);
-    const closePanel = () => setSelectedAsset(null);
-    const handleOpenQrModal = (asset) => setQrAsset(asset);
-    const handleCloseQrModal = () => setQrAsset(null);
-
-    const getStatusColor = (status) => {
-        switch(status) {
-            case 'checked_out': return 'bg-green-100 text-green-800 border-green-200';
-            case 'in_storage': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'in_repair': return 'bg-orange-100 text-orange-800 border-orange-200';
-            case 'broken': return 'bg-red-100 text-red-800 border-red-200';
-            case 'retired': return 'bg-gray-100 text-gray-800 border-gray-200';
-            default: return 'bg-blue-100 text-blue-800 border-blue-200';
-        }
-    };
-    
-    const allCategories = ["Laptop", "Desktop", "Monitor", "Printer", "Server", "Network", "Mobile", "Tablet", "Software", "Other"];
 
     return (
         <div className="p-6">
@@ -191,79 +223,38 @@ const AssetList = () => {
                     <Button iconName="Plus" onClick={() => navigate('/asset-registration')}>Add New Asset</Button>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-4 flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Icon name="Search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <input 
-                            type="text" 
-                            placeholder="Search by Tag, Name, or Serial..." 
-                            className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <select 
-                        className="px-4 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                    >
-                        <option value="All">All Categories</option>
-                        {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                </div>
+                <FilterToolbar
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    totalCount={assets.length}
+                    departments={departments}
+                    suppliers={suppliers}
+                    onExport={() => addNotification('Export functionality not yet implemented.', 'info')} // Placeholder
+                />
 
                 <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
                     {isLoading ? (
                         <div className="p-6"><DashboardSkeleton /></div>
-                    ) : sortedAndFilteredAssets.length === 0 ? (
+                    ) : assets.length === 0 ? (
                         <div className="p-12 text-center text-muted-foreground">
                             <Icon name="Package" size={48} className="mx-auto mb-4 opacity-20" />
                             <p>No assets found.</p>
                             <p className="text-xs mt-2">Try adjusting your search or add a new asset.</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-muted/50 text-muted-foreground uppercase text-xs">
-                                    <tr>
-                                        <th className="px-6 py-4 font-medium">Asset Tag</th>
-                                        <th className="px-6 py-4 font-medium">Product Details</th>
-                                        <th className="px-6 py-4 font-medium"><button onClick={() => handleSort('category')} className="flex items-center gap-2">Category<Icon name={getSortIcon('category')} size={14} /></button></th>
-                                        <th className="px-6 py-4 font-medium">Department</th>
-                                        <th className="px-6 py-4 font-medium">Supplier</th>
-                                        <th className="px-6 py-4 font-medium">Status</th>
-                                        <th className="px-6 py-4 font-medium text-right">Price</th>
-                                        <th className="px-6 py-4 font-medium text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {sortedAndFilteredAssets.map((asset) => (
-                                        <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-6 py-4"><button onClick={() => handleAssetClick(asset)} className="font-medium text-primary hover:underline">{asset.asset_tag}</button></td>
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-foreground">{asset.product_name}</div>
-                                                <div className="text-xs text-muted-foreground">{asset.serial_number}</div>
-                                            </td>
-                                            <td className="px-6 py-4">{asset.category}</td>
-                                            <td className="px-6 py-4">{asset.departments?.name || 'Unknown'}</td>
-                                            <td className="px-6 py-4 text-muted-foreground">{asset.suppliers?.company_name || 'Unknown'}</td>
-                                            <td className="px-6 py-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(asset.status)}`}>{formatAssetStatus(asset.status)}</span></td>
-                                            <td className="px-6 py-4 text-right font-medium">{asset.purchase_price ? `RM ${asset.purchase_price.toLocaleString()}` : '-'}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <Button variant="ghost" size="icon" onClick={() => navigate(`/asset-registration?id=${asset.id}`)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="Pencil" size={16} /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleOpenQrModal(asset)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Icon name="QrCode" size={16} /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteAsset(asset)} className="h-8 w-8 text-muted-foreground hover:text-destructive"><Icon name="Trash" size={16} /></Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <AssetTable
+                            assets={assets}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
+                            onAssetClick={handleAssetClick}
+                            onOpenQrModal={handleOpenQrModal}
+                            onDeleteAsset={handleDeleteAsset}
+                        />
                     )}
                 </div>
                 
                 <div className="text-xs text-muted-foreground text-center mt-4">
-                    Showing {sortedAndFilteredAssets.length} total assets
+                    Showing {assets.length} total assets
                 </div>
             </div>
             

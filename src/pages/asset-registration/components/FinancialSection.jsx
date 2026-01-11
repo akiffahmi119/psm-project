@@ -7,6 +7,22 @@ const FinancialSection = ({ control, errors, suppliers = [], isEditMode, asset }
   // Helper class for consistent input styling
   const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
+  const getStatusOptions = (currentStatus) => {
+    switch (currentStatus) {
+      case 'in_storage':
+      case 'checked_out':
+        return ['broken', 'in_repair'];
+      case 'in_repair':
+        return ['in_storage', 'broken', 'retired'];
+      case 'broken':
+        return ['in_storage', 'in_repair', 'retired'];
+      default:
+        return [];
+    }
+  };
+  
+  const statusOptions = asset ? getStatusOptions(asset.status) : [];
+
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-center space-x-2 mb-6">
@@ -102,29 +118,25 @@ const FinancialSection = ({ control, errors, suppliers = [], isEditMode, asset }
             )}
         </div>
 
-        {isEditMode && asset && (asset.status === 'in_storage' || asset.status === 'checked_out') && (
+        {isEditMode && asset && statusOptions.length > 0 && (
           <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
-                Update Status
-              </label>
-              <Controller
-                name="status"
-                control={control}
-                defaultValue={asset.status}
-                render={({ field }) => (
-                  <select 
-                    {...field}
-                    className={inputClass}
-                  >
-                      <option value={asset.status}>{asset.status}</option>
-                      <option value="broken">Broken</option>
-                      <option value="in_repair">In Repair</option>
-                  </select>
-                )}
-              />
-              {errors.status && (
-                <p className="text-xs text-red-500 font-medium">{errors.status.message}</p>
+            <label className="text-sm font-medium leading-none">Update Status</label>
+            <Controller
+              name="status"
+              control={control}
+              defaultValue={asset.status}
+              render={({ field }) => (
+                <select {...field} className={inputClass}>
+                  <option value={asset.status}>{asset.status}</option>
+                  {statusOptions.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
               )}
+            />
+            {errors.status && (
+              <p className="text-xs text-red-500 font-medium">{errors.status.message}</p>
+            )}
           </div>
         )}
       </div>
